@@ -1,1 +1,1 @@
-# DevCircle-Dev-JS-Workshop 📵🖥✅🇿🇲
+# DevCircle-Dev-JS-Workshop
