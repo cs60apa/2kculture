@@ -73,7 +73,7 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_song", ["songId"]),
-    
+
   // Likes system
   likes: defineTable({
     userId: v.string(), // Clerk user ID

@@ -570,17 +570,17 @@ function FavoriteSongButton({
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const toggleLike = useMutation(api.music.toggleLike);
-  
+
   // Handle toggling favorite status
   const handleToggleFavorite = async () => {
     if (!userId) return;
-    
+
     try {
       const result = await toggleLike({
         songId,
         userId,
       });
-      
+
       setIsFavorite(result.liked);
     } catch (error) {
       console.error("Error toggling favorite:", error);

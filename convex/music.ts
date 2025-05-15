@@ -322,16 +322,16 @@ export const incrementPlayCount = mutation({
   },
   handler: async (ctx, args) => {
     const song = await ctx.db.get(args.songId);
-    
+
     if (!song) {
       throw new Error("Song not found");
     }
-    
+
     // Increment play count
     await ctx.db.patch(args.songId, {
       plays: (song.plays || 0) + 1,
     });
-    
+
     return { success: true };
   },
 });
@@ -362,7 +362,7 @@ export const toggleLike = mutation({
     // Check if the like already exists
     const existingLike = await ctx.db
       .query("likes")
-      .withIndex("by_user_song", (q) => 
+      .withIndex("by_user_song", (q) =>
         q.eq("userId", args.userId).eq("songId", args.songId)
       )
       .first();

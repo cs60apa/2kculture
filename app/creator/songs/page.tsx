@@ -221,8 +221,8 @@ export default function SongsPage() {
                     </div>
                     <h3 className="text-lg font-medium mb-2">No songs yet</h3>
                     <p className="text-muted-foreground mb-4">
-                      You haven&apos;t uploaded any songs yet. Start sharing your
-                      music with the world!
+                      You haven&apos;t uploaded any songs yet. Start sharing
+                      your music with the world!
                     </p>
                     <Button onClick={() => router.push("/creator")}>
                       <Upload className="mr-2 h-4 w-4" />
