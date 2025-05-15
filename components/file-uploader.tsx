@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileWithPath } from "@uploadthing/react";
-import { useDropzone } from "@uploadthing/react/hooks";
+import Image from "next/image";
+import { useDropzone } from "react-dropzone";
 import { generateClientDropzoneAccept } from "uploadthing/client";
 
 import { useUploadThing } from "@/lib/uploadthing";
@@ -30,8 +30,8 @@ export function FileUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const { startUpload } = useUploadThing(endpoint, {
-    onClientUploadComplete: (res) => {
-      onChange(res?.[0].url);
+    onClientUploadComplete: (res: { url: string }[] | undefined) => {
+      onChange(res?.[0]?.url);
       setIsUploading(false);
       router.refresh();
     },
@@ -39,13 +39,13 @@ export function FileUploader({
       console.log(error);
       setIsUploading(false);
     },
-    onUploadProgress: (progress) => {
+    onUploadProgress: (progress: number) => {
       setUploadProgress(progress);
     },
   });
 
   const onDrop = useCallback(
-    (acceptedFiles: FileWithPath[]) => {
+    (acceptedFiles: File[]) => {
       setIsUploading(true);
       startUpload(acceptedFiles);
     },
@@ -76,10 +76,12 @@ export function FileUploader({
             <audio src={value} controls className="w-full mt-2" />
           ) : (
             <div className="relative h-20 w-20 overflow-hidden rounded-md">
-              <img
+              <Image
                 src={value}
                 alt="Uploaded file"
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             </div>
           )}
