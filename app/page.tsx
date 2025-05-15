@@ -1,130 +1,103 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Image from "next/image"
-import Link from "next/link"
-import { Play } from "lucide-react"
-import { featuredPlaylists, newReleases, popularArtists } from "@/lib/data"
+import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="container px-4 py-6 space-y-8">
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-r from-purple-900 to-indigo-900 dark:from-purple-950 dark:to-indigo-950 rounded-3xl">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-white">
-                  Discover Your Sound
-                </h1>
-                <p className="max-w-[600px] text-gray-200 md:text-xl">
-                  Stream millions of tracks from your favorite artists. Find new music and build your perfect playlist.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-                  <Link href="/signup">Sign Up Free</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white/10">
-                  <Link href="/explore">Explore Music</Link>
-                </Button>
-              </div>
-            </div>
-            <Image
-              src="/placeholder.svg?height=400&width=600"
-              alt="Music Visualization"
-              width={600}
-              height={400}
-              className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
-            />
-          </div>
-        </div>
-      </section>
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+        <Image
+          className="dark:invert"
+          src="/next.svg"
+          alt="Next.js logo"
+          width={180}
+          height={38}
+          priority
+        />
+        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+          <li className="mb-2 tracking-[-.01em]">
+            Get started by editing{" "}
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+              app/page.tsx
+            </code>
+            .
+          </li>
+          <li className="tracking-[-.01em]">
+            Save and see your changes instantly.
+          </li>
+        </ol>
 
-      <Tabs defaultValue="featured" className="w-full">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="featured">Featured</TabsTrigger>
-            <TabsTrigger value="new">New Releases</TabsTrigger>
-            <TabsTrigger value="artists">Popular Artists</TabsTrigger>
-          </TabsList>
+        <div className="flex gap-4 items-center flex-col sm:flex-row">
+          <a
+            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className="dark:invert"
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={20}
+              height={20}
+            />
+            Deploy now
+          </a>
+          <a
+            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read our docs
+          </a>
         </div>
-        <TabsContent value="featured" className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {featuredPlaylists.map((playlist) => (
-              <Card key={playlist.id} className="overflow-hidden">
-                <div className="relative group">
-                  <Image
-                    src={playlist.cover || "/placeholder.svg"}
-                    alt={playlist.title}
-                    width={300}
-                    height={300}
-                    className="w-full aspect-square object-cover transition-all group-hover:brightness-75"
-                  />
-                  <Button
-                    size="icon"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-purple-600 hover:bg-purple-700"
-                  >
-                    <Play className="h-4 w-4" />
-                    <span className="sr-only">Play</span>
-                  </Button>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold truncate">{playlist.title}</h3>
-                  <p className="text-sm text-muted-foreground">{playlist.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="new" className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {newReleases.map((release) => (
-              <Card key={release.id} className="overflow-hidden">
-                <div className="relative group">
-                  <Image
-                    src={release.cover || "/placeholder.svg"}
-                    alt={release.title}
-                    width={300}
-                    height={300}
-                    className="w-full aspect-square object-cover transition-all group-hover:brightness-75"
-                  />
-                  <Button
-                    size="icon"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-purple-600 hover:bg-purple-700"
-                  >
-                    <Play className="h-4 w-4" />
-                    <span className="sr-only">Play</span>
-                  </Button>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold truncate">{release.title}</h3>
-                  <p className="text-sm text-muted-foreground">{release.artist}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="artists" className="pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {popularArtists.map((artist) => (
-              <div key={artist.id} className="text-center">
-                <div className="relative mx-auto w-32 h-32 md:w-40 md:h-40 group">
-                  <Image
-                    src={artist.image || "/placeholder.svg"}
-                    alt={artist.name}
-                    width={160}
-                    height={160}
-                    className="w-full h-full rounded-full object-cover transition-all group-hover:brightness-75"
-                  />
-                </div>
-                <h3 className="mt-2 font-medium">{artist.name}</h3>
-                <p className="text-sm text-muted-foreground">{artist.genre}</p>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      </main>
+      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/file.svg"
+            alt="File icon"
+            width={16}
+            height={16}
+          />
+          Learn
+        </a>
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/window.svg"
+            alt="Window icon"
+            width={16}
+            height={16}
+          />
+          Examples
+        </a>
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/globe.svg"
+            alt="Globe icon"
+            width={16}
+            height={16}
+          />
+          Go to nextjs.org →
+        </a>
+      </footer>
     </div>
-  )
+  );
 }
