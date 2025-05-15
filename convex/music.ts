@@ -96,7 +96,7 @@ export const getSongs = query({
     const songs = await ctx.db
       .query("songs")
       .filter((q) => q.eq(q.field("isPublic"), true))
-      .order("desc", (q) => q.field("releaseDate"))
+      .order("desc")
       .take(50);
 
     return songs;
@@ -109,7 +109,7 @@ export const getSongsByArtist = query({
     const songs = await ctx.db
       .query("songs")
       .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
-      .order("desc", (q) => q.field("releaseDate"))
+      .order("desc")
       .collect();
 
     return songs;
@@ -123,7 +123,7 @@ export const getPopularSongs = query({
     const songs = await ctx.db
       .query("songs")
       .filter((q) => q.eq(q.field("isPublic"), true))
-      .order("desc", (q) => q.field("plays"))
+      .order("desc")
       .take(limit);
 
     return songs;
@@ -193,7 +193,7 @@ export const getAlbumsByArtist = query({
     const albums = await ctx.db
       .query("albums")
       .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
-      .order("desc", (q) => q.field("releaseDate"))
+      .order("desc")
       .collect();
 
     return albums;
@@ -237,7 +237,7 @@ export const createPlaylist = mutation({
       .first();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new Error("User not found");
     }
 
     const now = Date.now();
@@ -261,7 +261,7 @@ export const getUserPlaylists = query({
     const playlists = await ctx.db
       .query("playlists")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .order("desc", (q) => q.field("updatedAt"))
+      .order("desc")
       .collect();
 
     return playlists;
@@ -278,16 +278,16 @@ export const addSongToPlaylist = mutation({
     const playlist = await ctx.db.get(args.playlistId);
 
     if (!playlist) {
-      throw new ConvexError("Playlist not found");
+      throw new Error("Playlist not found");
     }
 
     if (playlist.userId !== args.userId) {
-      throw new ConvexError("Not authorized to modify this playlist");
+      throw new Error("Not authorized to modify this playlist");
     }
 
     const song = await ctx.db.get(args.songId);
     if (!song) {
-      throw new ConvexError("Song not found");
+      throw new Error("Song not found");
     }
 
     // Get the current highest position
@@ -350,13 +350,13 @@ export const toggleLike = mutation({
       .first();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new Error("User not found");
     }
 
     // Check if song exists
     const song = await ctx.db.get(args.songId);
     if (!song) {
-      throw new ConvexError("Song not found");
+      throw new Error("Song not found");
     }
 
     // Check if the like already exists
