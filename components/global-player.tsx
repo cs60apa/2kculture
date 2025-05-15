@@ -569,11 +569,24 @@ function FavoriteSongButton({
   userId?: string;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const toggleLike = useMutation(api.music.toggleLike);
   
-  // Let's create a basic interface to handle the state without the API call for now
-  const handleToggleFavorite = () => {
+  // Handle toggling favorite status
+  const handleToggleFavorite = async () => {
     if (!userId) return;
-    setIsFavorite(!isFavorite);
+    
+    try {
+      const result = await toggleLike({
+        songId,
+        userId,
+      });
+      
+      setIsFavorite(result.liked);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      // Fallback to local state toggle if API fails
+      setIsFavorite(!isFavorite);
+    }
   };
 
   return (

@@ -72,7 +72,7 @@ export default function LibraryPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <p className="text-muted-foreground mb-4">
-                  No results found for "{searchQuery}".
+                  No results found for &quot;{searchQuery}&quot;.
                 </p>
               </div>
             )}
