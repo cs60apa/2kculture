@@ -1,6 +1,5 @@
 "use client";
 
-// import { generateReactHelpers } from "@uploadthing/react/hooks";
 import { generateReactHelpers } from "@uploadthing/react";
 
 
