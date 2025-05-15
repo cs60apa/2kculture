@@ -165,13 +165,7 @@ interface Song {
   // Add other properties as needed
 }
 
-function SongCard({
-  song,
-  onPlay,
-}: {
-  song: Song;
-  onPlay: () => void;
-}) {
+function SongCard({ song, onPlay }: { song: Song; onPlay: () => void }) {
   return (
     <Card className="overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
       <div className="relative aspect-square bg-secondary">

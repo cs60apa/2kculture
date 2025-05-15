@@ -6,6 +6,16 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Music, Edit, Trash2, Upload, Play } from "lucide-react";
+import { Song as PlayerSong } from "@/lib/player-store";
+
+// Define Song interface based on what's used in this file
+interface Song extends PlayerSong {
+  genres?: string[];
+  plays?: number;
+  isPublic?: boolean;
+  releaseDate?: number;
+  _creationTime?: number;
+}
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -41,7 +51,8 @@ export default function SongsPage() {
   );
 
   // Format date
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return "N/A";
     return new Date(timestamp).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -49,10 +60,8 @@ export default function SongsPage() {
     });
   };
 
-  // Play song handler - uncomment if needed
-  // const handlePlaySong = (song: Song) => {
-  //   playSong(song);
-  // };
+  // Since we're using playSong directly in our onClick handlers,
+  // we don't need a separate handlePlaySong function
 
   // Redirect if not signed in
   if (isLoaded && !isSignedIn) {
@@ -129,7 +138,7 @@ export default function SongsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {songs.map((song) => (
+                        {songs.map((song: Song) => (
                           <TableRow key={song._id}>
                             <TableCell>
                               <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
