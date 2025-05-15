@@ -30,7 +30,7 @@ export function FileUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const { startUpload } = useUploadThing(endpoint, {
-    onClientUploadComplete: (res: { url: string }[] | undefined) => {
+    onClientUploadComplete: (res: Array<{ url: string }> | undefined) => {
       onChange(res?.[0]?.url);
       setIsUploading(false);
       router.refresh();
