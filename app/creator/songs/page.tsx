@@ -49,8 +49,8 @@ export default function SongsPage() {
     });
   };
 
-  // Play song handler
-  // const handlePlaySong = (song: any) => {
+  // Play song handler - uncomment if needed
+  // const handlePlaySong = (song: Song) => {
   //   playSong(song);
   // };
 

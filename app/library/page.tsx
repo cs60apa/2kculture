@@ -155,22 +155,35 @@ export default function LibraryPage() {
   );
 }
 
+// Define a proper Song type to avoid using 'any'
+interface Song {
+  _id: string;
+  title: string;
+  artistName: string;
+  coverArt?: string;
+  genres?: string[];
+  // Add other properties as needed
+}
+
 function SongCard({
   song,
   onPlay,
 }: {
-  song: Record<string, any>;
+  song: Song;
   onPlay: () => void;
 }) {
   return (
     <Card className="overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
       <div className="relative aspect-square bg-secondary">
         {song.coverArt ? (
-          <div className="h-full w-full">
-            <img
+          <div className="h-full w-full relative">
+            <Image
               src={song.coverArt}
               alt={song.title}
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 25vw"
+              className="object-cover"
+              priority
             />
           </div>
         ) : (
