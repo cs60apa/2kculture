@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Music, Search, Play, PlusCircle } from "lucide-react";
+import Image from "next/image";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -29,11 +30,6 @@ export default function LibraryPage() {
     api.music.searchSongs,
     searchQuery ? { query: searchQuery } : "skip"
   );
-
-  // Play a single song
-  const handlePlaySong = (song: any) => {
-    playSong(song);
-  };
 
   return (
     <>
