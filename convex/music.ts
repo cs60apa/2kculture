@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { ConvexError, Doc } from "convex/server";
+import { defineSchema, defineTable } from "convex/server";
 
 // USER RELATED FUNCTIONS
 export const createUser = mutation({
@@ -68,7 +68,7 @@ export const createSong = mutation({
       .first();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new Error("User not found");
     }
 
     const songId = await ctx.db.insert("songs", {
@@ -134,19 +134,21 @@ export const searchSongs = query({
   args: { query: v.string() },
   handler: async (ctx, args) => {
     const searchQuery = args.query.toLowerCase();
-    
+
     // Basic search - in a production app, you'd implement a more robust search function
     const allSongs = await ctx.db
       .query("songs")
       .filter((q) => q.eq(q.field("isPublic"), true))
       .collect();
-    
-    return allSongs.filter(song => 
-      song.title.toLowerCase().includes(searchQuery) ||
-      song.artistName.toLowerCase().includes(searchQuery) ||
-      (song.genres && song.genres.some(genre => 
-        genre.toLowerCase().includes(searchQuery)
-      ))
+
+    return allSongs.filter(
+      (song) =>
+        song.title.toLowerCase().includes(searchQuery) ||
+        song.artistName.toLowerCase().includes(searchQuery) ||
+        (song.genres &&
+          song.genres.some((genre) =>
+            genre.toLowerCase().includes(searchQuery)
+          ))
     );
   },
 });
@@ -168,7 +170,7 @@ export const createAlbum = mutation({
       .first();
 
     if (!user) {
-      throw new ConvexError("User not found");
+      throw new Error("User not found");
     }
 
     const albumId = await ctx.db.insert("albums", {
@@ -202,16 +204,16 @@ export const getAlbumWithSongs = query({
   args: { albumId: v.id("albums") },
   handler: async (ctx, args) => {
     const album = await ctx.db.get(args.albumId);
-    
+
     if (!album) {
-      throw new ConvexError("Album not found");
+      throw new Error("Album not found");
     }
-    
+
     const songs = await ctx.db
       .query("songs")
       .withIndex("by_albumId", (q) => q.eq("albumId", args.albumId))
       .collect();
-      
+
     return {
       album,
       songs,
@@ -274,28 +276,28 @@ export const addSongToPlaylist = mutation({
   },
   handler: async (ctx, args) => {
     const playlist = await ctx.db.get(args.playlistId);
-    
+
     if (!playlist) {
       throw new ConvexError("Playlist not found");
     }
-    
+
     if (playlist.userId !== args.userId) {
       throw new ConvexError("Not authorized to modify this playlist");
     }
-    
+
     const song = await ctx.db.get(args.songId);
     if (!song) {
       throw new ConvexError("Song not found");
     }
-    
+
     // Get the current highest position
     const existingSongs = await ctx.db
       .query("playlistSongs")
       .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
       .collect();
-    
+
     const position = existingSongs.length;
-    
+
     // Add the song to the playlist
     const playlistSongId = await ctx.db.insert("playlistSongs", {
       playlistId: args.playlistId,
@@ -303,12 +305,81 @@ export const addSongToPlaylist = mutation({
       addedAt: Date.now(),
       position,
     });
-    
+
     // Update the playlist's updatedAt timestamp
     await ctx.db.patch(args.playlistId, {
       updatedAt: Date.now(),
     });
-    
+
     return playlistSongId;
+  },
+});
+
+// PLAY COUNT FUNCTIONS
+export const incrementPlayCount = mutation({
+  args: {
+    songId: v.id("songs"),
+  },
+  handler: async (ctx, args) => {
+    const song = await ctx.db.get(args.songId);
+    
+    if (!song) {
+      throw new Error("Song not found");
+    }
+    
+    // Increment play count
+    await ctx.db.patch(args.songId, {
+      plays: (song.plays || 0) + 1,
+    });
+    
+    return { success: true };
+  },
+});
+
+// LIKE/FAVORITES RELATED FUNCTIONS
+export const toggleLike = mutation({
+  args: {
+    songId: v.id("songs"),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if user exists
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
+
+    // Check if song exists
+    const song = await ctx.db.get(args.songId);
+    if (!song) {
+      throw new ConvexError("Song not found");
+    }
+
+    // Check if the like already exists
+    const existingLike = await ctx.db
+      .query("likes")
+      .withIndex("by_user_song", (q) => 
+        q.eq("userId", args.userId).eq("songId", args.songId)
+      )
+      .first();
+
+    // If like exists, remove it
+    if (existingLike) {
+      await ctx.db.delete(existingLike._id);
+      return { liked: false };
+    }
+
+    // Otherwise, add the like
+    await ctx.db.insert("likes", {
+      userId: args.userId,
+      songId: args.songId,
+      createdAt: Date.now(),
+    });
+
+    return { liked: true };
   },
 });

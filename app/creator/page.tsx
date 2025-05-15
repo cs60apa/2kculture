@@ -14,8 +14,23 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { FileUploader } from "@/components/file-uploader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,7 +53,7 @@ export default function CreatorPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const [activeTab, setActiveTab] = useState("upload");
   const createSong = useMutation(api.music.createSong);
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,9 +74,13 @@ export default function CreatorPage() {
     }
 
     try {
-      const genresArray = values.genres ? values.genres.split(",").map(genre => genre.trim()) : [];
-      const tagsArray = values.tags ? values.tags.split(",").map(tag => tag.trim()) : [];
-      
+      const genresArray = values.genres
+        ? values.genres.split(",").map((genre) => genre.trim())
+        : [];
+      const tagsArray = values.tags
+        ? values.tags.split(",").map((tag) => tag.trim())
+        : [];
+
       await createSong({
         title: values.title,
         artistId: user.id,
@@ -72,14 +91,14 @@ export default function CreatorPage() {
         tags: tagsArray.length > 0 ? tagsArray : undefined,
         isPublic: values.isPublic,
       });
-      
+
       form.reset();
       router.push("/creator/songs");
     } catch (error) {
       console.error("Error uploading song:", error);
     }
   };
-  
+
   // Redirect if not signed in
   if (isLoaded && !isSignedIn) {
     return router.push("/");
@@ -99,7 +118,7 @@ export default function CreatorPage() {
               <CardContent>
                 <div className="flex flex-col space-y-2">
                   <Button
-                    variant={activeTab === "upload" ? "default" : "ghost"} 
+                    variant={activeTab === "upload" ? "default" : "ghost"}
                     className="justify-start"
                     onClick={() => setActiveTab("upload")}
                   >
@@ -118,13 +137,14 @@ export default function CreatorPage() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="w-full md:w-3/4">
             <Card className="mb-8">
               <CardHeader>
                 <CardTitle>Upload New Music</CardTitle>
                 <CardDescription>
-                  Share your music with the world. Upload songs one by one or create albums.
+                  Share your music with the world. Upload songs one by one or
+                  create albums.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -133,10 +153,13 @@ export default function CreatorPage() {
                     <TabsTrigger value="single">Single Track</TabsTrigger>
                     <TabsTrigger value="album">Album</TabsTrigger>
                   </TabsList>
-                  
+
                   <TabsContent value="single">
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                      >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-6">
                             <FormField
@@ -146,13 +169,16 @@ export default function CreatorPage() {
                                 <FormItem>
                                   <FormLabel>Song Title</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Enter song title" {...field} />
+                                    <Input
+                                      placeholder="Enter song title"
+                                      {...field}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                            
+
                             <FormField
                               control={form.control}
                               name="genres"
@@ -160,7 +186,10 @@ export default function CreatorPage() {
                                 <FormItem>
                                   <FormLabel>Genres</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Pop, Hip Hop, R&B (comma separated)" {...field} />
+                                    <Input
+                                      placeholder="Pop, Hip Hop, R&B (comma separated)"
+                                      {...field}
+                                    />
                                   </FormControl>
                                   <FormDescription>
                                     Add genres separated by commas
@@ -169,7 +198,7 @@ export default function CreatorPage() {
                                 </FormItem>
                               )}
                             />
-                            
+
                             <FormField
                               control={form.control}
                               name="tags"
@@ -177,7 +206,10 @@ export default function CreatorPage() {
                                 <FormItem>
                                   <FormLabel>Tags</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="chill, summer, dance (comma separated)" {...field} />
+                                    <Input
+                                      placeholder="chill, summer, dance (comma separated)"
+                                      {...field}
+                                    />
                                   </FormControl>
                                   <FormDescription>
                                     Add tags to help listeners find your music
@@ -186,7 +218,7 @@ export default function CreatorPage() {
                                 </FormItem>
                               )}
                             />
-                            
+
                             <FormField
                               control={form.control}
                               name="isPublic"
@@ -201,7 +233,8 @@ export default function CreatorPage() {
                                   <div className="space-y-1 leading-none">
                                     <FormLabel>Make public</FormLabel>
                                     <FormDescription>
-                                      Your song will appear in search results and be available to all users
+                                      Your song will appear in search results
+                                      and be available to all users
                                     </FormDescription>
                                   </div>
                                   <FormMessage />
@@ -209,7 +242,7 @@ export default function CreatorPage() {
                               )}
                             />
                           </div>
-                          
+
                           <div className="space-y-6">
                             <FormField
                               control={form.control}
@@ -228,7 +261,7 @@ export default function CreatorPage() {
                                 </FormItem>
                               )}
                             />
-                            
+
                             <FormField
                               control={form.control}
                               name="coverArt"
@@ -243,7 +276,8 @@ export default function CreatorPage() {
                                     />
                                   </FormControl>
                                   <FormDescription>
-                                    Upload cover art for your song (recommended size: 500x500 pixels)
+                                    Upload cover art for your song (recommended
+                                    size: 500x500 pixels)
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
@@ -251,7 +285,7 @@ export default function CreatorPage() {
                             />
                           </div>
                         </div>
-                        
+
                         <div className="flex justify-end">
                           <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Uploading..." : "Upload Song"}
@@ -260,17 +294,23 @@ export default function CreatorPage() {
                       </form>
                     </Form>
                   </TabsContent>
-                  
+
                   <TabsContent value="album">
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="bg-primary/10 p-3 rounded-full mb-4">
                         <Plus className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Create an Album</h3>
+                      <h3 className="text-lg font-medium mb-2">
+                        Create an Album
+                      </h3>
                       <p className="text-muted-foreground mb-4 max-w-md">
-                        The album creation feature will be available soon. For now, you can upload individual songs.
+                        The album creation feature will be available soon. For
+                        now, you can upload individual songs.
                       </p>
-                      <Button variant="outline" onClick={() => router.push("?tab=single")}>
+                      <Button
+                        variant="outline"
+                        onClick={() => router.push("?tab=single")}
+                      >
                         Upload Single Tracks
                       </Button>
                     </div>

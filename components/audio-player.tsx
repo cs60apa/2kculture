@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Howl } from 'howler';
-import { 
-  Heart, 
-  Pause, 
-  Play, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX, 
-  Repeat, 
-  Shuffle 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useRef, useState } from "react";
+import { Howl } from "howler";
+import {
+  Heart,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Repeat,
+  Shuffle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 
 interface AudioPlayerProps {
   src: string;
@@ -27,14 +27,14 @@ interface AudioPlayerProps {
   className?: string;
 }
 
-export const AudioPlayer = ({ 
-  src, 
-  title, 
-  artist, 
-  coverArt, 
-  onNext, 
+export const AudioPlayer = ({
+  src,
+  title,
+  artist,
+  coverArt,
+  onNext,
   onPrevious,
-  className
+  className,
 }: AudioPlayerProps) => {
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -44,7 +44,7 @@ export const AudioPlayer = ({
   const [repeat, setRepeat] = useState(false);
   const [shuffle, setShuffle] = useState(false);
   const [liked, setLiked] = useState(false);
-  
+
   const soundRef = useRef<Howl | null>(null);
   const seekIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -55,7 +55,7 @@ export const AudioPlayer = ({
       if (soundRef.current) {
         soundRef.current.unload();
       }
-      
+
       // Create new instance
       const sound = new Howl({
         src: [src],
@@ -75,9 +75,9 @@ export const AudioPlayer = ({
           }
         },
       });
-      
+
       soundRef.current = sound;
-      
+
       // Clean up on component unmount
       return () => {
         if (soundRef.current) {
@@ -93,7 +93,7 @@ export const AudioPlayer = ({
   // Handle play/pause toggle
   const togglePlay = () => {
     if (!soundRef.current) return;
-    
+
     if (playing) {
       soundRef.current.pause();
       if (seekIntervalRef.current) {
@@ -109,14 +109,14 @@ export const AudioPlayer = ({
         }
       }, 1000);
     }
-    
+
     setPlaying(!playing);
   };
 
   // Handle seek change
   const handleSeekChange = (values: number[]) => {
     if (!soundRef.current) return;
-    
+
     const newSeek = values[0];
     soundRef.current.seek(newSeek);
     setSeek(newSeek);
@@ -125,11 +125,11 @@ export const AudioPlayer = ({
   // Handle volume change
   const handleVolumeChange = (values: number[]) => {
     if (!soundRef.current) return;
-    
+
     const newVolume = values[0];
     soundRef.current.volume(newVolume);
     setVolume(newVolume);
-    
+
     if (newVolume === 0) {
       setMuted(true);
     } else if (muted) {
@@ -140,7 +140,7 @@ export const AudioPlayer = ({
   // Toggle mute
   const toggleMute = () => {
     if (!soundRef.current) return;
-    
+
     if (muted) {
       soundRef.current.volume(volume || 0.5);
       setMuted(false);
@@ -154,19 +154,24 @@ export const AudioPlayer = ({
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   return (
-    <div className={cn("bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4", className)}>
+    <div
+      className={cn(
+        "bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4",
+        className
+      )}
+    >
       <div className="flex items-center gap-4">
         {/* Cover Art */}
         <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
           {coverArt ? (
-            <img 
-              src={coverArt} 
+            <img
+              src={coverArt}
               alt={`${title} cover art`}
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-indigo-600">
@@ -174,14 +179,14 @@ export const AudioPlayer = ({
             </div>
           )}
         </div>
-        
+
         {/* Track Info and Controls */}
         <div className="flex-1">
           <div className="mb-2">
             <h3 className="font-medium text-base line-clamp-1">{title}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">{artist}</p>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="space-y-1">
             <Slider
@@ -192,7 +197,7 @@ export const AudioPlayer = ({
               onValueChange={handleSeekChange}
               className="cursor-pointer"
             />
-            
+
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>{formatTime(seek)}</span>
               <span>{formatTime(duration)}</span>
@@ -200,7 +205,7 @@ export const AudioPlayer = ({
           </div>
         </div>
       </div>
-      
+
       {/* Controls */}
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center gap-4">
@@ -210,21 +215,22 @@ export const AudioPlayer = ({
             onClick={() => setShuffle(!shuffle)}
             className={cn(
               "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
-              shuffle && "text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
+              shuffle &&
+                "text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
             )}
           >
             <Shuffle className="h-5 w-5" />
           </Button>
-          
-          <Button 
-            size="icon" 
-            variant="ghost" 
+
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={onPrevious}
             disabled={!onPrevious}
           >
             <SkipBack className="h-5 w-5" />
           </Button>
-          
+
           <Button
             size="icon"
             onClick={togglePlay}
@@ -236,29 +242,30 @@ export const AudioPlayer = ({
               <Play className="h-5 w-5" />
             )}
           </Button>
-          
-          <Button 
-            size="icon" 
-            variant="ghost" 
+
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={onNext}
             disabled={!onNext}
           >
             <SkipForward className="h-5 w-5" />
           </Button>
-          
+
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setRepeat(!repeat)}
             className={cn(
               "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
-              repeat && "text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
+              repeat &&
+                "text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
             )}
           >
             <Repeat className="h-5 w-5" />
           </Button>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             size="icon"
@@ -266,24 +273,21 @@ export const AudioPlayer = ({
             onClick={() => setLiked(!liked)}
             className={cn(
               "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
-              liked && "text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
+              liked &&
+                "text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300"
             )}
           >
             <Heart className={cn("h-5 w-5", liked && "fill-current")} />
           </Button>
-          
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={toggleMute}
-          >
+
+          <Button size="icon" variant="ghost" onClick={toggleMute}>
             {muted ? (
               <VolumeX className="h-5 w-5" />
             ) : (
               <Volume2 className="h-5 w-5" />
             )}
           </Button>
-          
+
           <div className="w-24">
             <Slider
               value={[muted ? 0 : volume]}

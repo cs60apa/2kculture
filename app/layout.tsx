@@ -18,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "2kCulture - Modern Music Streaming",
-  description: "Stream and share your music with 2kCulture, the modern music platform for artists and listeners",
+  description:
+    "Stream and share your music with 2kCulture, the modern music platform for artists and listeners",
 };
 
 export default function RootLayout({

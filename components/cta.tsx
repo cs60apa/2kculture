@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export function CallToAction() {
   const router = useRouter();
   const { isSignedIn } = useUser();
-  
+
   return (
     <section className="py-20 bg-primary/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,7 +20,7 @@ export function CallToAction() {
             <p className="text-xl text-muted-foreground mb-6">
               Join thousands of artists and listeners on 2kCulture today.
             </p>
-            
+
             {isSignedIn ? (
               <div className="flex flex-wrap gap-4">
                 <Button
@@ -58,7 +58,7 @@ export function CallToAction() {
               </div>
             )}
           </div>
-          
+
           <div className="relative w-full max-w-md aspect-square">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full opacity-20 blur-2xl"></div>
             <div className="relative bg-card border border-border rounded-3xl shadow-xl p-8 h-full flex items-center justify-center">
@@ -72,12 +72,20 @@ export function CallToAction() {
                 </p>
                 <div className="grid grid-cols-2 gap-4 w-full">
                   <div className="flex flex-col items-center p-3 bg-primary/5 rounded-lg">
-                    <span className="text-2xl font-bold text-indigo-500">100+</span>
-                    <span className="text-xs text-muted-foreground">Songs per month</span>
+                    <span className="text-2xl font-bold text-indigo-500">
+                      100+
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Songs per month
+                    </span>
                   </div>
                   <div className="flex flex-col items-center p-3 bg-primary/5 rounded-lg">
-                    <span className="text-2xl font-bold text-indigo-500">Free</span>
-                    <span className="text-xs text-muted-foreground">Account Creation</span>
+                    <span className="text-2xl font-bold text-indigo-500">
+                      Free
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Account Creation
+                    </span>
                   </div>
                 </div>
               </div>

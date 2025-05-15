@@ -18,7 +18,7 @@ export function Hero() {
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-1/4 right-1/3 w-64 h-64 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
       </div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -30,10 +30,11 @@ export function Hero() {
             Discover and Share the Music that Defines Your Culture
           </h1>
           <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            2kCulture provides a platform for emerging artists to share their sounds
-            and for listeners to discover the next wave of cultural music.
+            2kCulture provides a platform for emerging artists to share their
+            sounds and for listeners to discover the next wave of cultural
+            music.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isSignedIn ? (
               <Button
@@ -46,15 +47,15 @@ export function Hero() {
             ) : (
               <SignUpButton mode="modal">
                 <Button
-                  size="lg" 
+                  size="lg"
                   className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
                 >
                   Get started for free
                 </Button>
               </SignUpButton>
             )}
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
               className="border-white text-white hover:bg-white/10"
               onClick={() => router.push("#features")}
@@ -63,7 +64,7 @@ export function Hero() {
             </Button>
           </div>
         </motion.div>
-        
+
         {/* Floating music player mockup */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}

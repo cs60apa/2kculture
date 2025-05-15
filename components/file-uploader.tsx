@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileWithPath } from "@uploadthing/react";
 import { useDropzone } from "@uploadthing/react/hooks";
 import { generateClientDropzoneAccept } from "uploadthing/client";
- 
+
 import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,13 +54,19 @@ export function FileUploader({
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: endpoint === "audioUploader" 
-      ? generateClientDropzoneAccept(["audio/*"]) 
-      : generateClientDropzoneAccept(["image/*"])
+    accept:
+      endpoint === "audioUploader"
+        ? generateClientDropzoneAccept(["audio/*"])
+        : generateClientDropzoneAccept(["image/*"]),
   });
 
   const fileType = endpoint === "audioUploader" ? "audio" : "image";
-  const fileIcon = endpoint === "audioUploader" ? <Music className="h-10 w-10 text-gray-400" /> : <Upload className="h-10 w-10 text-gray-400" />;
+  const fileIcon =
+    endpoint === "audioUploader" ? (
+      <Music className="h-10 w-10 text-gray-400" />
+    ) : (
+      <Upload className="h-10 w-10 text-gray-400" />
+    );
 
   return (
     <div className={cn("w-full", className)}>
@@ -70,14 +76,14 @@ export function FileUploader({
             <audio src={value} controls className="w-full mt-2" />
           ) : (
             <div className="relative h-20 w-20 overflow-hidden rounded-md">
-              <img src={value} alt="Uploaded file" className="w-full h-full object-cover" />
+              <img
+                src={value}
+                alt="Uploaded file"
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
-          <Button 
-            variant="outline"
-            onClick={() => onChange("")}
-            size="sm"
-          >
+          <Button variant="outline" onClick={() => onChange("")} size="sm">
             Change {fileType}
           </Button>
         </div>
@@ -90,10 +96,13 @@ export function FileUploader({
           <div className="flex flex-col items-center justify-center text-center">
             {fileIcon}
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Drag &apos;n&apos; drop {fileType} file here, or click to select file
+              Drag &apos;n&apos; drop {fileType} file here, or click to select
+              file
             </p>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {endpoint === "audioUploader" ? "MP3, AAC (max 32MB)" : "PNG, JPG, WEBP (max 8MB)"}
+              {endpoint === "audioUploader"
+                ? "MP3, AAC (max 32MB)"
+                : "PNG, JPG, WEBP (max 8MB)"}
             </p>
           </div>
         </div>

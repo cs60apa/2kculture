@@ -73,6 +73,16 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_song", ["songId"]),
+    
+  // Likes system
+  likes: defineTable({
+    userId: v.string(), // Clerk user ID
+    songId: v.id("songs"),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_song", ["songId"])
+    .index("by_user_song", ["userId", "songId"]),
 
   // Listen history
   history: defineTable({

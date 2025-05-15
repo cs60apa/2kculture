@@ -8,7 +8,9 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <main className="pt-16"> {/* Add padding to account for fixed navbar */}
+      <main className="pt-16">
+        {" "}
+        {/* Add padding to account for fixed navbar */}
         <Hero />
         <Features />
         <CallToAction />

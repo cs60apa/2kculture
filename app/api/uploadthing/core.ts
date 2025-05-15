@@ -16,7 +16,10 @@ export const ourFileRouter = {
       if (!user) throw new Error("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id, userName: `${user.firstName} ${user.lastName}` };
+      return {
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -25,7 +28,7 @@ export const ourFileRouter = {
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.userName, audioUrl: file.url };
     }),
-  
+
   // Add another route for cover art uploads
   imageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 1 } })
     .middleware(async ({ req }) => {

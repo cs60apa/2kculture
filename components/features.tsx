@@ -1,4 +1,14 @@
-import { Music, Upload, Library, Search, Repeat, Heart, Mic, Layout, Users } from "lucide-react";
+import {
+  Music,
+  Upload,
+  Library,
+  Search,
+  Repeat,
+  Heart,
+  Mic,
+  Layout,
+  Users,
+} from "lucide-react";
 
 const features = [
   {
@@ -60,7 +70,8 @@ export function Features() {
             Everything you need for your music
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            2kCulture provides all the tools you need to enjoy and share music that matters to you.
+            2kCulture provides all the tools you need to enjoy and share music
+            that matters to you.
           </p>
         </div>
 
