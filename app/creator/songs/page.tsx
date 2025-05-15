@@ -207,16 +207,7 @@ export default function SongsPage() {
               </CardContent>
             </Card>
             
-            {currentSong && (
-              <div className="sticky bottom-0 left-0 right-0 z-40">
-                <AudioPlayer
-                  src={currentSong.audioUrl}
-                  title={currentSong.title}
-                  artist={currentSong.artistName}
-                  coverArt={currentSong.coverArt}
-                />
-              </div>
-            )}
+            {/* Player is now handled globally */}
           </div>
         </div>
       </div>

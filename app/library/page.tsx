@@ -7,7 +7,7 @@ import { Music, Search, PlayIcon, PlusCircle } from "lucide-react";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { AudioPlayer } from "@/components/audio-player";
+import { usePlayerStore } from "@/lib/player-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LibraryPage() {
-  const [currentSong, setCurrentSong] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { playSong, playQueue } = usePlayerStore();
   
   // Fetch latest songs
   const latestSongs = useQuery(api.music.getSongs) || [];
