@@ -31,6 +31,7 @@ export function CallToAction() {
                   Browse music
                 </Button>
                 <Button
+                  className="cursor-pointer"
                   variant="outline"
                   size="lg"
                   onClick={() => router.push("/creator")}
@@ -43,12 +44,13 @@ export function CallToAction() {
                 <SignUpButton mode="modal">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
+                    className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
                   >
                     Create free account
                   </Button>
                 </SignUpButton>
                 <Button
+                  className="cursor-pointer"
                   variant="outline"
                   size="lg"
                   onClick={() => router.push("/#features")}
