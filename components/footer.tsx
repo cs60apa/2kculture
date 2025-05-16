@@ -21,25 +21,25 @@ export function Footer() {
             <h4 className="font-medium text-sm">Resources</h4>
             <div className="flex flex-col space-y-2 text-sm">
               <Link
-                href="/about"
+                href="/resources/about"
                 className="text-muted-foreground hover:text-foreground"
               >
                 About us
               </Link>
               <Link
-                href="/help"
+                href="/resources/help"
                 className="text-muted-foreground hover:text-foreground"
               >
                 Help center
               </Link>
               <Link
-                href="/privacy"
+                href="/resources/privacy"
                 className="text-muted-foreground hover:text-foreground"
               >
                 Privacy
               </Link>
               <Link
-                href="/terms"
+                href="/resources/terms"
                 className="text-muted-foreground hover:text-foreground"
               >
                 Terms of service
@@ -118,19 +118,19 @@ export function Footer() {
           </p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link
-              href="/privacy"
+              href="/resources/privacy"
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Privacy
             </Link>
             <Link
-              href="/terms"
+              href="/resources/terms"
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Terms
             </Link>
             <Link
-              href="/cookies"
+              href="/resources/cookies"
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Cookies
