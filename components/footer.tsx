@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Music } from "lucide-react";
 
 export function Footer() {
@@ -116,7 +117,7 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} 2kCulture. All rights reserved.
           </p>
-          <div className="flex space-x-4 mt-4 md:mt-0">
+          <div className="flex space-x-4 mt-4 md:mt-0 items-center">
             <Link
               href="/resources/privacy"
               className="text-xs text-muted-foreground hover:text-foreground"
@@ -135,6 +136,22 @@ export function Footer() {
             >
               Cookies
             </Link>
+            <a
+              href="https://www.dmca.com/compliance/2kculture.com"
+              title="DMCA Compliance information for 2kculture.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-1"
+            >
+              <Image
+                src="https://www.dmca.com/img/dmca-compliant-grayscale.png"
+                alt="DMCA compliant image"
+                width={80}
+                height={15}
+                quality={100}
+                priority={false}
+              />
+            </a>
           </div>
         </div>
       </div>
