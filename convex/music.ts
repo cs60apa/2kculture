@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { defineSchema, defineTable } from "convex/server";
 
 // USER RELATED FUNCTIONS
 export const createUser = mutation({
@@ -60,6 +59,7 @@ export const createSong = mutation({
     genres: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
     isPublic: v.boolean(),
+    releaseDate: v.optional(v.number()), // Allow custom release date
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -83,7 +83,7 @@ export const createSong = mutation({
       tags: args.tags,
       plays: 0,
       likes: 0,
-      releaseDate: Date.now(),
+      releaseDate: args.releaseDate || Date.now(), // Use provided date or current timestamp
       isPublic: args.isPublic,
     });
 
