@@ -1,5 +1,5 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { currentUser } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 
 const f = createUploadthing();
 
@@ -8,7 +8,7 @@ export const ourFileRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
   audioUploader: f({ audio: { maxFileSize: "32MB", maxFileCount: 10 } })
     // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       // This code runs on your server before upload
       const user = await currentUser();
 
@@ -31,7 +31,7 @@ export const ourFileRouter = {
 
   // Add another route for cover art uploads
   imageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 1 } })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const user = await currentUser();
       if (!user) throw new Error("Unauthorized");
       return { userId: user.id };
