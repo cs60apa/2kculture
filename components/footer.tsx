@@ -138,12 +138,12 @@ export function Footer() {
             </Link>
             <a
               href="https://www.dmca.com/compliance/2kculture.com"
-              title="DMCA Compliance information for 2kculture.com"
+              // title="DMCA Compliance information for 2kculture.com"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-1"
             >
-                            <Image
+              <Image
                 src="https://www.dmca.com/img/dmca-compliant-grayscale.png"
                 alt="DMCA compliant image"
                 width={80}
