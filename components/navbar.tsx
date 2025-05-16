@@ -69,7 +69,20 @@ export function Navbar() {
         <div className="flex items-center gap-x-2">
           <ThemeToggle />
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-x-2">
+          {isSignedIn && (
+            <Link
+              href="/analytics"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md",
+                pathname.startsWith("/analytics")
+                  ? "text-black dark:text-white bg-black/10 dark:bg-white/10"
+                  : "text-muted-foreground"
+              )}
+            >
+              Analytics
+            </Link>
+          )}
           {isSignedIn ? (
             <UserButton afterSignOutUrl="/" />
           ) : (
