@@ -82,6 +82,11 @@ export function Navbar() {
             >
               Analytics
             </Link>
+
+            
+
+
+            
           )}
           {isSignedIn ? (
             <UserButton afterSignOutUrl="/" />
