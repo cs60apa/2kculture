@@ -115,7 +115,13 @@ export const updateSong = mutation({
     }
 
     // Create update object with only the fields that were provided
-    const updateFields: any = {};
+    const updateFields: Partial<{
+      title: string;
+      coverArt: string | undefined;
+      genres: string[] | undefined;
+      tags: string[] | undefined;
+      isPublic: boolean;
+    }> = {};
 
     if (args.title !== undefined) updateFields.title = args.title;
     if (args.coverArt !== undefined) updateFields.coverArt = args.coverArt;
@@ -125,6 +131,33 @@ export const updateSong = mutation({
 
     // Update the song
     await ctx.db.patch(args.id, updateFields);
+
+    // Return the updated song
+    return await ctx.db.get(args.id);
+  },
+});
+
+// Mutation to toggle a song's publication status
+export const toggleSongPublicationStatus = mutation({
+  args: {
+    id: v.id("songs"),
+    artistId: v.string(), // For permission checking
+    isPublic: v.boolean(), // The new publication status
+  },
+  handler: async (ctx, args) => {
+    const song = await ctx.db.get(args.id);
+
+    if (!song) {
+      throw new Error("Song not found");
+    }
+
+    // Verify that the user is the artist who owns this song
+    if (song.artistId !== args.artistId) {
+      throw new Error("Not authorized to edit this song");
+    }
+
+    // Update the publication status
+    await ctx.db.patch(args.id, { isPublic: args.isPublic });
 
     // Return the updated song
     return await ctx.db.get(args.id);
@@ -174,6 +207,34 @@ export const getSongsByArtist = query({
     const songs = await ctx.db
       .query("songs")
       .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
+      .order("desc")
+      .collect();
+
+    return songs;
+  },
+});
+
+export const getDraftSongsByArtist = query({
+  args: { artistId: v.string() },
+  handler: async (ctx, args) => {
+    const songs = await ctx.db
+      .query("songs")
+      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
+      .filter((q) => q.eq(q.field("isPublic"), false))
+      .order("desc")
+      .collect();
+
+    return songs;
+  },
+});
+
+export const getPublishedSongsByArtist = query({
+  args: { artistId: v.string() },
+  handler: async (ctx, args) => {
+    const songs = await ctx.db
+      .query("songs")
+      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
+      .filter((q) => q.eq(q.field("isPublic"), true))
       .order("desc")
       .collect();
 

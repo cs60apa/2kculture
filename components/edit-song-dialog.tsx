@@ -234,9 +234,10 @@ export function EditSongDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                     <div className="space-y-0.5">
-                      <FormLabel>Visibility</FormLabel>
+                      <FormLabel>Publish Status</FormLabel>
                       <FormDescription>
-                        Make this song public or private
+                        Published songs are visible to the public. Drafts are
+                        only visible to you.
                       </FormDescription>
                     </div>
                     <FormControl>

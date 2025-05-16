@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Music, Edit, Trash2, Upload, Play } from "lucide-react";
+import {
+  Music,
+  Edit,
+  Trash2,
+  Upload,
+  Play,
+  ArrowUpCircle,
+  EyeOff,
+} from "lucide-react";
 import Image from "next/image";
 import { EditSongDialog } from "@/components/edit-song-dialog";
 import { Song, SongId } from "@/types/song";
@@ -30,11 +38,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SongsPage() {
   const router = useRouter();
   const { user, isSignedIn, isLoaded } = useUser();
-  const [activeTab, setActiveTab] = useState("songs");
+  const [activeTab, setActiveTab] = useState("all");
   const { playSong } = usePlayerStore();
 
   // State for edit song dialog
@@ -49,10 +58,23 @@ export default function SongsPage() {
   // Delete song functionality
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const deleteSong = useMutation(api.music.deleteSong);
+  const toggleSongPublicationStatus = useMutation(
+    api.music.toggleSongPublicationStatus
+  );
 
   // Fetch songs by the current artist
-  const songs = useQuery(
+  const allSongs = useQuery(
     api.music.getSongsByArtist,
+    isSignedIn && user ? { artistId: user.id } : "skip"
+  );
+
+  const draftSongs = useQuery(
+    api.music.getDraftSongsByArtist,
+    isSignedIn && user ? { artistId: user.id } : "skip"
+  );
+
+  const publishedSongs = useQuery(
+    api.music.getPublishedSongsByArtist,
     isSignedIn && user ? { artistId: user.id } : "skip"
   );
 
@@ -64,6 +86,46 @@ export default function SongsPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Handle toggling publication status
+  const handleTogglePublicationStatus = async (song: Song) => {
+    if (!user) return;
+
+    try {
+      await toggleSongPublicationStatus({
+        id: song._id as SongId,
+        artistId: user.id,
+        isPublic: !song.isPublic,
+      });
+
+      // Show success message
+      setStatusMessage({
+        type: "success",
+        message: song.isPublic
+          ? "Song moved to drafts"
+          : "Song published successfully",
+      });
+
+      // Clear the status message after 3 seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to update song status:", error);
+
+      // Show error message
+      setStatusMessage({
+        type: "error",
+        message: "Failed to update song status",
+        songId: song._id,
+      });
+
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+      }, 3000);
+    }
   };
 
   // Handle song deletion
@@ -148,7 +210,7 @@ export default function SongsPage() {
                   <Button
                     variant={activeTab === "songs" ? "default" : "ghost"}
                     className="justify-start"
-                    onClick={() => setActiveTab("songs")}
+                    onClick={() => setActiveTab("all")}
                   >
                     <Music className="mr-2 h-4 w-4" />
                     My Songs
@@ -187,11 +249,50 @@ export default function SongsPage() {
                   </div>
                 )}
 
-                {songs === undefined ? (
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="mb-6"
+                >
+                  <TabsList>
+                    <TabsTrigger value="all">All Songs</TabsTrigger>
+                    <TabsTrigger value="published">Published</TabsTrigger>
+                    <TabsTrigger value="drafts">Drafts</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {/* Loading State */}
+                {(activeTab === "all" && allSongs === undefined) ||
+                (activeTab === "published" && publishedSongs === undefined) ||
+                (activeTab === "drafts" && draftSongs === undefined) ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
-                ) : songs && songs.length > 0 ? (
+                ) : /* Empty State */
+                (activeTab === "all" && allSongs?.length === 0) ||
+                  (activeTab === "published" && publishedSongs?.length === 0) ||
+                  (activeTab === "drafts" && draftSongs?.length === 0) ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="bg-primary/10 p-3 rounded-full mb-4">
+                      <Music className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">No songs yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {activeTab === "drafts"
+                        ? "You don't have any draft songs. Upload songs and save them as drafts for later."
+                        : activeTab === "published"
+                          ? "You don't have any published songs. Publish your drafts to make them available to listeners."
+                          : "You haven't uploaded any songs yet. Start sharing your music with the world!"}
+                    </p>
+                    <Button onClick={() => router.push("/creator")}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {activeTab === "drafts"
+                        ? "Create a Draft"
+                        : "Upload Your First Song"}
+                    </Button>
+                  </div>
+                ) : (
+                  /* Song Table */
                   <div className="space-y-6">
                     <Table>
                       <TableHeader>
@@ -206,7 +307,12 @@ export default function SongsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {songs.map((song: Song) => (
+                        {(activeTab === "all"
+                          ? allSongs
+                          : activeTab === "published"
+                            ? publishedSongs
+                            : draftSongs
+                        )?.map((song: Song) => (
                           <TableRow
                             key={song._id}
                             className={
@@ -275,7 +381,7 @@ export default function SongsPage() {
                                   Boolean(song.isPublic) ? "default" : "outline"
                                 }
                               >
-                                {Boolean(song.isPublic) ? "Public" : "Private"}
+                                {Boolean(song.isPublic) ? "Public" : "Draft"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
@@ -296,6 +402,22 @@ export default function SongsPage() {
                                   onClick={() => playSong(song)}
                                 >
                                   <Play className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleTogglePublicationStatus(song)
+                                  }
+                                  title={
+                                    song.isPublic ? "Move to drafts" : "Publish"
+                                  }
+                                >
+                                  {song.isPublic ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <ArrowUpCircle className="h-4 w-4" />
+                                  )}
                                 </Button>
                                 <Button
                                   size="icon"
@@ -326,21 +448,6 @@ export default function SongsPage() {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="bg-primary/10 p-3 rounded-full mb-4">
-                      <Music className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-medium mb-2">No songs yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      You haven&apos;t uploaded any songs yet. Start sharing
-                      your music with the world!
-                    </p>
-                    <Button onClick={() => router.push("/creator")}>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload Your First Song
-                    </Button>
                   </div>
                 )}
               </CardContent>

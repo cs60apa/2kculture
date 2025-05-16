@@ -544,7 +544,7 @@ export default function CreatorPage() {
       tags: "",
       audioUrl: "",
       coverArt: "",
-      isPublic: true,
+      isPublic: false, // Default to draft mode
     },
   });
 
@@ -765,10 +765,12 @@ export default function CreatorPage() {
                                     />
                                   </FormControl>
                                   <div className="space-y-1 leading-none">
-                                    <FormLabel>Make public</FormLabel>
+                                    <FormLabel>Publish immediately</FormLabel>
                                     <FormDescription>
-                                      Your song will appear in search results
-                                      and be available to all users
+                                      If checked, your song will be public and
+                                      available to all users. If unchecked, it
+                                      will be saved as a draft and only visible
+                                      to you.
                                     </FormDescription>
                                   </div>
                                   <FormMessage />
