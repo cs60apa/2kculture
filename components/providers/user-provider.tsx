@@ -16,12 +16,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           // Create or retrieve user in Convex
           await createUser({
             userId: user.id,
-            name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username || "User",
+            name:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+              user.username ||
+              "User",
             email: user.emailAddresses[0]?.emailAddress || "",
             imageUrl: user.imageUrl || undefined,
             role: "artist", // Default role - you could make this configurable
           });
-          
+
           console.log("User synced with Convex database");
         } catch (error) {
           console.error("Error syncing user with Convex:", error);
