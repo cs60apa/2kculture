@@ -15,13 +15,17 @@
 
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-const isProtectedRoute = createRouteMatcher(
-  [
-    "/", "/api/uploadthing", "/api/webhook"
-  ])
+// Define public routes that should NOT be protected
+const isPublicRoute = createRouteMatcher([
+  '/api/uploadthing',
+  '/api/webhook'
+])
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect()
+  // Only protect routes that are not in the public routes list
+  if (!isPublicRoute(req)) {
+    await auth.protect()
+  }
 })
 
 export const config = {
