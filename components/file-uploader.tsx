@@ -10,7 +10,7 @@ import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Music, Upload } from "lucide-react";
+import { AlertCircle, Music, Upload } from "lucide-react";
 
 interface FileUploaderProps {
   onChange: (url?: string) => void;
@@ -28,16 +28,19 @@ export function FileUploader({
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const { startUpload } = useUploadThing(endpoint, {
     onClientUploadComplete: (res: Array<{ url: string }> | undefined) => {
       onChange(res?.[0]?.url);
       setIsUploading(false);
+      setUploadError(null);
       router.refresh();
     },
     onUploadError: (error: Error) => {
       console.log(error);
       setIsUploading(false);
+      setUploadError(error.message || "Failed to upload file. Please try again.");
     },
     onUploadProgress: (progress: number) => {
       setUploadProgress(progress);
@@ -46,26 +49,34 @@ export function FileUploader({
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      setIsUploading(true);
-      startUpload(acceptedFiles);
+      if (acceptedFiles.length > 0) {
+        setUploadError(null);
+        setIsUploading(true);
+        startUpload(acceptedFiles);
+      }
     },
     [startUpload]
   );
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept:
       endpoint === "audioUploader"
         ? generateClientDropzoneAccept(["audio/*"])
         : generateClientDropzoneAccept(["image/*"]),
+    maxFiles: 1,
+    maxSize: endpoint === "audioUploader" ? 32 * 1024 * 1024 : 8 * 1024 * 1024, // 32MB for audio, 8MB for images
+    onError: (err) => {
+      setUploadError(err.message);
+    }
   });
 
   const fileType = endpoint === "audioUploader" ? "audio" : "image";
   const fileIcon =
     endpoint === "audioUploader" ? (
-      <Music className="h-10 w-10 text-gray-400" />
+      <Music className={cn("h-10 w-10", isDragActive ? "text-primary" : "text-gray-400")} />
     ) : (
-      <Upload className="h-10 w-10 text-gray-400" />
+      <Upload className={cn("h-10 w-10", isDragActive ? "text-primary" : "text-gray-400")} />
     );
 
   return (
@@ -92,20 +103,42 @@ export function FileUploader({
       ) : (
         <div
           {...getRootProps()}
-          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer"
+          className={cn(
+            "border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors",
+            isDragActive 
+              ? "border-primary bg-primary/5" 
+              : "border-gray-300 dark:border-gray-700",
+            uploadError 
+              ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20" 
+              : ""
+          )}
         >
           <input {...getInputProps()} />
           <div className="flex flex-col items-center justify-center text-center">
-            {fileIcon}
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Drag &apos;n&apos; drop {fileType} file here, or click to select
-              file
+            {uploadError ? (
+              <AlertCircle className="h-10 w-10 text-red-500" />
+            ) : (
+              fileIcon
+            )}
+            <p className={cn(
+              "mt-2 text-sm",
+              uploadError 
+                ? "text-red-600 dark:text-red-400" 
+                : "text-gray-500 dark:text-gray-400"
+            )}>
+              {uploadError ? uploadError : (
+                isDragActive 
+                  ? `Drop the ${fileType} file here...` 
+                  : `Drag 'n' drop ${fileType} file here, or click to select file`
+              )}
             </p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {endpoint === "audioUploader"
-                ? "MP3, AAC (max 32MB)"
-                : "PNG, JPG, WEBP (max 8MB)"}
-            </p>
+            {!uploadError && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {endpoint === "audioUploader"
+                  ? "MP3, AAC (max 32MB)"
+                  : "PNG, JPG, WEBP (max 8MB)"}
+              </p>
+            )}
           </div>
         </div>
       )}
