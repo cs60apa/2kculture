@@ -57,7 +57,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="cursor-pointer border-white text-white hover:bg-white/10"
+              className="cursor-pointer border-white text-black hover:text-white hover:bg-white/10"
               onClick={() => router.push("#features")}
             >
               Learn more
