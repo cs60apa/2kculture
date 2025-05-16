@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
+import { UserProvider } from "@/components/providers/user-provider";
 import PlayerWrapper from "@/components/player-wrapper";
 import "./globals.css";
 
@@ -40,8 +41,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ConvexClientProvider>
-              {children}
-              <PlayerWrapper />
+              <UserProvider>
+                {children}
+                <PlayerWrapper />
+              </UserProvider>
             </ConvexClientProvider>
           </ThemeProvider>
         </body>
