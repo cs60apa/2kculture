@@ -26,11 +26,6 @@ export function Navbar() {
       href: "/library",
       active: pathname === "/library",
     },
-    {
-      label: "Creator Studio",
-      href: "/creator",
-      active: pathname.startsWith("/creator"),
-    },
   ];
 
   return (
@@ -71,22 +66,30 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-x-2">
           {isSignedIn && (
-            <Link
-              href="/analytics"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md",
-                pathname.startsWith("/analytics")
-                  ? "text-black dark:text-white bg-black/10 dark:bg-white/10"
-                  : "text-muted-foreground"
-              )}
-            >
-              Analytics
-            </Link>
-
-            
-
-
-            
+            <>
+              <Link
+                href="/analytics"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md",
+                  pathname.startsWith("/analytics")
+                    ? "text-black dark:text-white bg-black/10 dark:bg-white/10"
+                    : "text-muted-foreground"
+                )}
+              >
+                Analytics
+              </Link>
+              <Link
+                href="/creator"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md",
+                  pathname.startsWith("/creator")
+                    ? "text-black dark:text-white bg-black/10 dark:bg-white/10"
+                    : "text-muted-foreground"
+                )}
+              >
+                Creator Studio
+              </Link>
+            </>
           )}
           {isSignedIn ? (
             <UserButton afterSignOutUrl="/" />
