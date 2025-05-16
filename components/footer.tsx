@@ -143,7 +143,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="ml-1"
             >
-                            pnpm dev<Image
+                            <Image
                 src="https://www.dmca.com/img/dmca-compliant-grayscale.png"
                 alt="DMCA compliant image"
                 width={80}
