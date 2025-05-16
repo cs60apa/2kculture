@@ -269,9 +269,9 @@ export default function SongsPage() {
                             </TableCell>
                             <TableCell className="text-center">
                               <Badge
-                                variant={song.isPublic ? "default" : "outline"}
+                                variant={Boolean(song.isPublic) ? "default" : "outline"}
                               >
-                                {song.isPublic ? "Public" : "Private"}
+                                {Boolean(song.isPublic) ? "Public" : "Private"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
