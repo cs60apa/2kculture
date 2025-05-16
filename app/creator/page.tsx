@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Music, Plus, Upload } from "lucide-react";
+import { Music, Upload } from "lucide-react";
 import { z } from "zod";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -14,6 +14,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { FileUploader } from "@/components/file-uploader";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
@@ -34,7 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Define the form schema with required validation
+// Define the form schema with required validation for single tracks
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   artistName: z.string().optional(), // This will be displayed but populated from user data
@@ -46,7 +47,305 @@ const formSchema = z.object({
   isPublic: z.boolean(), // Non-optional with default value handled in defaultValues
 });
 
+// Define schema for album creation
+const albumFormSchema = z.object({
+  title: z.string().min(1, "Album title is required"),
+  description: z.string().optional(),
+  genres: z.string().optional(),
+  coverArt: z.string().optional(),
+  songs: z.array(
+    z.object({
+      title: z.string().min(1, "Song title is required"),
+      audioUrl: z.string().min(1, "Audio file is required"),
+      trackNumber: z.number().min(1, "Track number must be at least 1"),
+    })
+  ).optional(),
+});
+
 type FormValues = z.infer<typeof formSchema>;
+type AlbumFormValues = z.infer<typeof albumFormSchema>;
+
+// Define a type for Clerk User properties we need
+interface ClerkUser {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+// Album creation form component
+function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
+  const router = useRouter();
+  const createAlbum = useMutation(api.music.createAlbum);
+  const createSong = useMutation(api.music.createSong);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [songs, setSongs] = useState<Array<{
+    title: string;
+    audioUrl: string;
+    trackNumber: number;
+  }>>([]);
+
+  // Form for album details
+  const form = useForm<AlbumFormValues>({
+    resolver: zodResolver(albumFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      genres: "",
+      coverArt: "",
+      songs: [],
+    },
+  });
+
+  // Form for adding a new song to the album
+  const songForm = useForm({
+    defaultValues: {
+      title: "",
+      audioUrl: "",
+    },
+  });
+
+  const addSong = () => {
+    const { title, audioUrl } = songForm.getValues();
+    
+    if (!title || !audioUrl) {
+      return;
+    }
+    
+    const newSong = {
+      title,
+      audioUrl,
+      trackNumber: songs.length + 1,
+    };
+    
+    setSongs([...songs, newSong]);
+    songForm.reset();
+  };
+
+  const removeSong = (index: number) => {
+    setSongs(songs.filter((_, i) => i !== index));
+    
+    // Update track numbers
+    setSongs(prev => 
+      prev.map((song, i) => ({
+        ...song,
+        trackNumber: i + 1,
+      }))
+    );
+  };
+
+  const onSubmit = async (values: AlbumFormValues) => {
+    if (!user) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      const genresArray = values.genres
+        ? values.genres.split(",").map((genre) => genre.trim())
+        : [];
+      
+      // Create the album
+      const albumId = await createAlbum({
+        title: values.title,
+        artistId: user.id,
+        artistName: `${user.firstName} ${user.lastName}`,
+        coverArt: values.coverArt,
+        genres: genresArray.length > 0 ? genresArray : undefined,
+        description: values.description || undefined,
+      });
+      
+      // Add songs to the album
+      if (songs.length > 0) {
+        for (const song of songs) {
+          await createSong({
+            title: song.title,
+            artistId: user.id,
+            artistName: `${user.firstName} ${user.lastName}`,
+            albumId,
+            audioUrl: song.audioUrl,
+            coverArt: values.coverArt, // Use album cover art for all songs
+            isPublic: true,
+            releaseDate: Date.now(),
+          });
+        }
+      }
+      
+      form.reset();
+      setSongs([]);
+      router.push("/creator/songs");
+    } catch (error) {
+      console.error("Error creating album:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <div className="space-y-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Album Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter album title"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Describe your album"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Tell your audience about this album
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="genres"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Genres</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Pop, Hip Hop, R&B (comma separated)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Add genres separated by commas
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="coverArt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Album Cover Art</FormLabel>
+                    <FormControl>
+                      <FileUploader
+                        endpoint="imageUploader"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload cover art for your album (recommended
+                      size: 500x500 pixels)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          <Separator className="my-8" />
+          
+          <div>
+            <h3 className="text-lg font-medium mb-4">Album Songs</h3>
+            
+            {songs.length === 0 ? (
+              <div className="text-center py-8 border border-dashed rounded-md bg-muted/50">
+                <p className="text-muted-foreground">
+                  No songs added yet. Add tracks to your album below.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {songs.map((song, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between p-4 border rounded-md"
+                  >
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center mr-4">
+                        <span className="font-medium">{song.trackNumber}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{song.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Audio file uploaded
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeSong(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="mt-6 p-4 border rounded-md">
+              <h4 className="font-medium mb-4">Add Song</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  placeholder="Song Title"
+                  {...songForm.register("title")}
+                />
+                <div className="md:col-span-2">
+                  <FileUploader
+                    endpoint="audioUploader"
+                    value={songForm.watch("audioUrl")}
+                    onChange={(url) => songForm.setValue("audioUrl", url || "")}
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={addSong} 
+                  className="md:col-span-2 w-full"
+                  disabled={!songForm.watch("title") || !songForm.watch("audioUrl")}
+                >
+                  Add Song to Album
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end mt-8">
+            <Button type="submit" disabled={isSubmitting || songs.length === 0}>
+              {isSubmitting ? "Creating Album..." : "Create Album"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
 
 export default function CreatorPage() {
   const router = useRouter();
@@ -351,24 +650,7 @@ export default function CreatorPage() {
                   </TabsContent>
 
                   <TabsContent value="album">
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="bg-primary/10 p-3 rounded-full mb-4">
-                        <Plus className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-medium mb-2">
-                        Create an Album
-                      </h3>
-                      <p className="text-muted-foreground mb-4 max-w-md">
-                        The album creation feature will be available soon. For
-                        now, you can upload individual songs.
-                      </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => router.push("?tab=single")}
-                      >
-                        Upload Single Tracks
-                      </Button>
-                    </div>
+                    <AlbumCreationForm user={user as ClerkUser | null} />
                   </TabsContent>
                 </Tabs>
               </CardContent>
