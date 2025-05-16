@@ -39,7 +39,7 @@ export function Hero() {
             {isSignedIn ? (
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
+                className=" bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
                 onClick={() => router.push("/library")}
               >
                 Go to Library
@@ -48,7 +48,7 @@ export function Hero() {
               <SignUpButton mode="modal">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
+                  className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
                 >
                   Get started for free
                 </Button>
@@ -57,7 +57,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="border-white text-white hover:bg-white/10"
+              className="cursor-pointer border-white text-white hover:bg-white/10"
               onClick={() => router.push("#features")}
             >
               Learn more
