@@ -260,7 +260,9 @@ export default function SongsPage() {
                                     )}
                                   </>
                                 ) : (
-                                  <span className="text-muted-foreground text-sm">None</span>
+                                  <span className="text-muted-foreground text-sm">
+                                    None
+                                  </span>
                                 )}
                               </div>
                             </TableCell>
@@ -269,7 +271,9 @@ export default function SongsPage() {
                             </TableCell>
                             <TableCell className="text-center">
                               <Badge
-                                variant={Boolean(song.isPublic) ? "default" : "outline"}
+                                variant={
+                                  Boolean(song.isPublic) ? "default" : "outline"
+                                }
                               >
                                 {Boolean(song.isPublic) ? "Public" : "Private"}
                               </Badge>
