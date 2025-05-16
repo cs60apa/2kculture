@@ -67,7 +67,7 @@ export function EditSongDialog({
       genres: song?.genres ? song.genres.join(", ") : "",
       tags: song?.tags ? song.tags.join(", ") : "",
       coverArt: song?.coverArt || "",
-      isPublic: song?.isPublic ?? true,
+      isPublic: Boolean(song?.isPublic),
     },
   });
 
@@ -75,11 +75,11 @@ export function EditSongDialog({
   useEffect(() => {
     if (song) {
       form.reset({
-        title: song.title,
+        title: song.title || "",
         genres: song.genres ? song.genres.join(", ") : "",
         tags: song.tags ? song.tags.join(", ") : "",
         coverArt: song.coverArt || "",
-        isPublic: song.isPublic,
+        isPublic: Boolean(song.isPublic),
       });
     }
   }, [song, form]);
