@@ -53,13 +53,15 @@ const albumFormSchema = z.object({
   description: z.string().optional(),
   genres: z.string().optional(),
   coverArt: z.string().optional(),
-  songs: z.array(
-    z.object({
-      title: z.string().min(1, "Song title is required"),
-      audioUrl: z.string().min(1, "Audio file is required"),
-      trackNumber: z.number().min(1, "Track number must be at least 1"),
-    })
-  ).optional(),
+  songs: z
+    .array(
+      z.object({
+        title: z.string().min(1, "Song title is required"),
+        audioUrl: z.string().min(1, "Audio file is required"),
+        trackNumber: z.number().min(1, "Track number must be at least 1"),
+      })
+    )
+    .optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -78,11 +80,13 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
   const createAlbum = useMutation(api.music.createAlbum);
   const createSong = useMutation(api.music.createSong);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [songs, setSongs] = useState<Array<{
-    title: string;
-    audioUrl: string;
-    trackNumber: number;
-  }>>([]);
+  const [songs, setSongs] = useState<
+    Array<{
+      title: string;
+      audioUrl: string;
+      trackNumber: number;
+    }>
+  >([]);
 
   // Form for album details
   const form = useForm<AlbumFormValues>({
@@ -109,31 +113,31 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
 
   const addSong = () => {
     const { title, audioUrl } = songForm.getValues();
-    
+
     setAddSongError(null);
-    
+
     if (!title) {
       setAddSongError("Please enter a song title");
       return;
     }
-    
+
     if (!audioUrl) {
       setAddSongError("Please upload an audio file");
       return;
     }
-    
+
     setIsAddingSong(true);
-    
+
     try {
       const newSong = {
         title,
         audioUrl,
         trackNumber: songs.length + 1,
       };
-      
+
       setSongs([...songs, newSong]);
       songForm.reset();
-      
+
       // Clear any form-level errors since we now have songs
       if (songs.length === 0) {
         form.clearErrors("title");
@@ -146,17 +150,19 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
     }
   };
 
-  const [removingSongIndex, setRemovingSongIndex] = useState<number | null>(null);
+  const [removingSongIndex, setRemovingSongIndex] = useState<number | null>(
+    null
+  );
 
   const removeSong = (index: number) => {
     setRemovingSongIndex(index);
-    
+
     try {
       setSongs(songs.filter((_, i) => i !== index));
-      
+
       // Update track numbers
       setTimeout(() => {
-        setSongs(prev => 
+        setSongs((prev) =>
           prev.map((song, i) => ({
             ...song,
             trackNumber: i + 1,
@@ -170,23 +176,23 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
 
   const onSubmit = async (values: AlbumFormValues) => {
     if (!user) return;
-    
+
     // Validate that at least one song has been added
     if (songs.length === 0) {
-      form.setError("title", { 
-        type: "manual", 
-        message: "Please add at least one song to your album before submitting" 
+      form.setError("title", {
+        type: "manual",
+        message: "Please add at least one song to your album before submitting",
       });
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       const genresArray = values.genres
         ? values.genres.split(",").map((genre) => genre.trim())
         : [];
-      
+
       // Create the album
       const albumId = await createAlbum({
         title: values.title,
@@ -196,7 +202,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
         genres: genresArray.length > 0 ? genresArray : undefined,
         description: values.description || undefined,
       });
-      
+
       // Add songs to the album
       for (const song of songs) {
         await createSong({
@@ -210,7 +216,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
           releaseDate: Date.now(),
         });
       }
-      
+
       form.reset();
       setSongs([]);
       router.push("/creator/songs");
@@ -220,7 +226,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="space-y-8">
       <Form {...form}>
@@ -234,16 +240,13 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                   <FormItem>
                     <FormLabel>Album Title</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter album title"
-                        {...field}
-                      />
+                      <Input placeholder="Enter album title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="description"
@@ -251,10 +254,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Describe your album"
-                        {...field}
-                      />
+                      <Input placeholder="Describe your album" {...field} />
                     </FormControl>
                     <FormDescription>
                       Tell your audience about this album
@@ -263,7 +263,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="genres"
@@ -284,7 +284,7 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                 )}
               />
             </div>
-            
+
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -300,8 +300,8 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                       />
                     </FormControl>
                     <FormDescription>
-                      Upload cover art for your album (recommended
-                      size: 500x500 pixels)
+                      Upload cover art for your album (recommended size: 500x500
+                      pixels)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -311,10 +311,10 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
           </div>
 
           <Separator className="my-8" />
-          
+
           <div>
             <h3 className="text-lg font-medium mb-4">Album Songs</h3>
-            
+
             {songs.length === 0 ? (
               <div className="text-center py-8 border border-dashed rounded-md bg-muted/50">
                 <p className="text-muted-foreground">
@@ -324,8 +324,8 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
             ) : (
               <div className="space-y-2">
                 {songs.map((song, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex items-center justify-between p-4 border rounded-md"
                   >
                     <div className="flex items-center">
@@ -337,17 +337,17 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                         <p className="text-xs text-muted-foreground">
                           Audio file uploaded
                         </p>
-                        <audio 
-                          src={song.audioUrl} 
-                          className="mt-2 w-full max-w-[200px] h-8" 
-                          controls 
+                        <audio
+                          src={song.audioUrl}
+                          className="mt-2 w-full max-w-[200px] h-8"
+                          controls
                         />
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           // Edit song functionality
                           songForm.setValue("title", song.title);
@@ -355,19 +355,25 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                           removeSong(index);
                           // Scroll to the add song form
                           setTimeout(() => {
-                            document.getElementById("add-song-section")?.scrollIntoView({ behavior: "smooth" });
+                            document
+                              .getElementById("add-song-section")
+                              ?.scrollIntoView({ behavior: "smooth" });
                           }, 100);
                         }}
                       >
                         Edit
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                         disabled={removingSongIndex === index}
                         onClick={() => {
-                          if (window.confirm(`Remove "${song.title}" from the album?`)) {
+                          if (
+                            window.confirm(
+                              `Remove "${song.title}" from the album?`
+                            )
+                          ) {
                             removeSong(index);
                           }
                         }}
@@ -379,21 +385,29 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                 ))}
               </div>
             )}
-            
+
             <div id="add-song-section" className="mt-6 p-4 border rounded-md">
               <h4 className="font-medium mb-4">Add Song</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Song Title"
                   {...songForm.register("title")}
-                  className={addSongError && !songForm.watch("title") ? "border-red-500" : ""}
+                  className={
+                    addSongError && !songForm.watch("title")
+                      ? "border-red-500"
+                      : ""
+                  }
                 />
                 <div className="md:col-span-2">
                   <FileUploader
                     endpoint="audioUploader"
                     value={songForm.watch("audioUrl")}
                     onChange={(url) => songForm.setValue("audioUrl", url || "")}
-                    className={addSongError && !songForm.watch("audioUrl") ? "border-red-500" : ""}
+                    className={
+                      addSongError && !songForm.watch("audioUrl")
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
                 </div>
                 {addSongError && (
@@ -401,16 +415,22 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
                     {addSongError}
                   </div>
                 )}
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={addSong} 
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addSong}
                   className="md:col-span-2 w-full"
-                  disabled={isAddingSong || (!songForm.watch("title") && !songForm.watch("audioUrl"))}
+                  disabled={
+                    isAddingSong ||
+                    (!songForm.watch("title") && !songForm.watch("audioUrl"))
+                  }
                 >
                   {isAddingSong ? (
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24">
+                      <svg
+                        className="animate-spin h-4 w-4 mr-1"
+                        viewBox="0 0 24 24"
+                      >
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -442,19 +462,24 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-4 mt-8">
-            {form.formState.errors.title && typeof form.formState.errors.title.message === 'string' && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.title.message}
-              </p>
-            )}
+            {form.formState.errors.title &&
+              typeof form.formState.errors.title.message === "string" && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.title.message}
+                </p>
+              )}
             <div className="flex gap-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to discard this album?")) {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to discard this album?"
+                    )
+                  ) {
                     form.reset();
                     setSongs([]);
                   }
@@ -463,14 +488,17 @@ function AlbumCreationForm({ user }: { user: ClerkUser | null }) {
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isSubmitting || songs.length === 0}
                 className="relative"
               >
                 {isSubmitting ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                    <svg
+                      className="animate-spin h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"

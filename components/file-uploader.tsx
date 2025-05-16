@@ -40,7 +40,9 @@ export function FileUploader({
     onUploadError: (error: Error) => {
       console.log(error);
       setIsUploading(false);
-      setUploadError(error.message || "Failed to upload file. Please try again.");
+      setUploadError(
+        error.message || "Failed to upload file. Please try again."
+      );
     },
     onUploadProgress: (progress: number) => {
       setUploadProgress(progress);
@@ -68,15 +70,25 @@ export function FileUploader({
     maxSize: endpoint === "audioUploader" ? 32 * 1024 * 1024 : 8 * 1024 * 1024, // 32MB for audio, 8MB for images
     onError: (err) => {
       setUploadError(err.message);
-    }
+    },
   });
 
   const fileType = endpoint === "audioUploader" ? "audio" : "image";
   const fileIcon =
     endpoint === "audioUploader" ? (
-      <Music className={cn("h-10 w-10", isDragActive ? "text-primary" : "text-gray-400")} />
+      <Music
+        className={cn(
+          "h-10 w-10",
+          isDragActive ? "text-primary" : "text-gray-400"
+        )}
+      />
     ) : (
-      <Upload className={cn("h-10 w-10", isDragActive ? "text-primary" : "text-gray-400")} />
+      <Upload
+        className={cn(
+          "h-10 w-10",
+          isDragActive ? "text-primary" : "text-gray-400"
+        )}
+      />
     );
 
   return (
@@ -105,11 +117,11 @@ export function FileUploader({
           {...getRootProps()}
           className={cn(
             "border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors",
-            isDragActive 
-              ? "border-primary bg-primary/5" 
+            isDragActive
+              ? "border-primary bg-primary/5"
               : "border-gray-300 dark:border-gray-700",
-            uploadError 
-              ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20" 
+            uploadError
+              ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20"
               : ""
           )}
         >
@@ -120,17 +132,19 @@ export function FileUploader({
             ) : (
               fileIcon
             )}
-            <p className={cn(
-              "mt-2 text-sm",
-              uploadError 
-                ? "text-red-600 dark:text-red-400" 
-                : "text-gray-500 dark:text-gray-400"
-            )}>
-              {uploadError ? uploadError : (
-                isDragActive 
-                  ? `Drop the ${fileType} file here...` 
-                  : `Drag 'n' drop ${fileType} file here, or click to select file`
+            <p
+              className={cn(
+                "mt-2 text-sm",
+                uploadError
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-gray-500 dark:text-gray-400"
               )}
+            >
+              {uploadError
+                ? uploadError
+                : isDragActive
+                  ? `Drop the ${fileType} file here...`
+                  : `Drag 'n' drop ${fileType} file here, or click to select file`}
             </p>
             {!uploadError && (
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
