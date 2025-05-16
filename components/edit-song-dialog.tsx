@@ -178,8 +178,8 @@ export function EditSongDialog({
                   <div className="flex-1">
                     <FileUploader
                       endpoint="imageUploader"
-                      value={form.watch("coverArt") || ""}
-                      onChange={(url) => form.setValue("coverArt", url || "")}
+                      value={form.watch("coverArt") ?? ""}
+                      onChange={(url) => form.setValue("coverArt", url ?? "")}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Recommended: Square image, at least 500x500px

@@ -219,11 +219,11 @@ export default function SongsPage() {
                           >
                             <TableCell>
                               <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
-                                {song.coverArt && song.coverArt.length > 0 ? (
+                                {song.coverArt ? (
                                   <div className="relative h-full w-full">
                                     <Image
-                                      src={song.coverArt as string}
-                                      alt={song.title}
+                                      src={song.coverArt || ""}
+                                      alt={song.title || "Song"}
                                       fill
                                       sizes="48px"
                                       className="object-cover"
@@ -244,17 +244,23 @@ export default function SongsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {song.genres
-                                  ?.slice(0, 2)
-                                  .map((genre: string, index: number) => (
-                                    <Badge key={index} variant="outline">
-                                      {genre}
-                                    </Badge>
-                                  ))}
-                                {song.genres && song.genres.length > 2 && (
-                                  <Badge variant="outline">
-                                    +{song.genres.length - 2}
-                                  </Badge>
+                                {song.genres && song.genres.length > 0 ? (
+                                  <>
+                                    {song.genres
+                                      .slice(0, 2)
+                                      .map((genre: string, index: number) => (
+                                        <Badge key={index} variant="outline">
+                                          {genre}
+                                        </Badge>
+                                      ))}
+                                    {song.genres.length > 2 && (
+                                      <Badge variant="outline">
+                                        +{song.genres.length - 2}
+                                      </Badge>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">None</span>
                                 )}
                               </div>
                             </TableCell>
