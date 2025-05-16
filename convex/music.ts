@@ -91,6 +91,71 @@ export const createSong = mutation({
   },
 });
 
+// New mutation to update song details
+export const updateSong = mutation({
+  args: {
+    id: v.id("songs"),
+    title: v.optional(v.string()),
+    coverArt: v.optional(v.string()),
+    genres: v.optional(v.array(v.string())),
+    tags: v.optional(v.array(v.string())),
+    isPublic: v.optional(v.boolean()),
+    artistId: v.string(), // For permission checking
+  },
+  handler: async (ctx, args) => {
+    const song = await ctx.db.get(args.id);
+
+    if (!song) {
+      throw new Error("Song not found");
+    }
+
+    // Verify that the user is the artist who owns this song
+    if (song.artistId !== args.artistId) {
+      throw new Error("Not authorized to edit this song");
+    }
+
+    // Create update object with only the fields that were provided
+    const updateFields: any = {};
+
+    if (args.title !== undefined) updateFields.title = args.title;
+    if (args.coverArt !== undefined) updateFields.coverArt = args.coverArt;
+    if (args.genres !== undefined) updateFields.genres = args.genres;
+    if (args.tags !== undefined) updateFields.tags = args.tags;
+    if (args.isPublic !== undefined) updateFields.isPublic = args.isPublic;
+
+    // Update the song
+    await ctx.db.patch(args.id, updateFields);
+
+    // Return the updated song
+    return await ctx.db.get(args.id);
+  },
+});
+
+// New mutation to delete a song
+export const deleteSong = mutation({
+  args: {
+    id: v.id("songs"),
+    artistId: v.string(), // For permission checking
+  },
+  handler: async (ctx, args) => {
+    const song = await ctx.db.get(args.id);
+
+    if (!song) {
+      throw new Error("Song not found");
+    }
+
+    // Verify that the user is the artist who owns this song
+    if (song.artistId !== args.artistId) {
+      throw new Error("Not authorized to delete this song");
+    }
+
+    // Delete the song
+    await ctx.db.delete(args.id);
+
+    return { success: true };
+  },
+});
+
 export const getSongs = query({
   handler: async (ctx) => {
     const songs = await ctx.db

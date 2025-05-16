@@ -3,19 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Music, Edit, Trash2, Upload, Play } from "lucide-react";
-import { Song as PlayerSong } from "@/lib/player-store";
-
-// Define Song interface based on what's used in this file
-interface Song extends PlayerSong {
-  genres?: string[];
-  plays?: number;
-  isPublic?: boolean;
-  releaseDate?: number;
-  _creationTime?: number;
-}
+import Image from "next/image";
+import { EditSongDialog } from "@/components/edit-song-dialog";
+import { Song, SongId } from "@/types/song";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -44,6 +37,19 @@ export default function SongsPage() {
   const [activeTab, setActiveTab] = useState("songs");
   const { playSong } = usePlayerStore();
 
+  // State for edit song dialog
+  const [editSongDialogOpen, setEditSongDialogOpen] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{
+    type: "success" | "error";
+    message: string;
+    songId?: string;
+  } | null>(null);
+
+  // Delete song functionality
+  const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
+  const deleteSong = useMutation(api.music.deleteSong);
+
   // Fetch songs by the current artist
   const songs = useQuery(
     api.music.getSongsByArtist,
@@ -58,6 +64,56 @@ export default function SongsPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Handle song deletion
+  const handleDeleteSong = async (songId: string) => {
+    if (!user || !songId) return;
+
+    // Confirmation dialog
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this song? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setDeletingSongId(songId);
+
+    try {
+      await deleteSong({
+        id: songId as SongId,
+        artistId: user.id,
+      });
+
+      // Show success message
+      setStatusMessage({
+        type: "success",
+        message: "Song deleted successfully",
+      });
+
+      // Clear the status message after 3 seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to delete song:", error);
+
+      // Show error message
+      setStatusMessage({
+        type: "error",
+        message: "Failed to delete song",
+        songId: songId,
+      });
+
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setStatusMessage(null);
+      }, 3000);
+    } finally {
+      setDeletingSongId(null);
+    }
   };
 
   // Since we're using playSong directly in our onClick handlers,
@@ -119,6 +175,18 @@ export default function SongsPage() {
                 </div>
               </CardHeader>
               <CardContent>
+                {statusMessage && !statusMessage.songId && (
+                  <div
+                    className={`mb-4 p-4 rounded-md ${
+                      statusMessage.type === "success"
+                        ? "bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900"
+                        : "bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900"
+                    }`}
+                  >
+                    {statusMessage.message}
+                  </div>
+                )}
+
                 {songs === undefined ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -139,15 +207,28 @@ export default function SongsPage() {
                       </TableHeader>
                       <TableBody>
                         {songs.map((song: Song) => (
-                          <TableRow key={song._id}>
+                          <TableRow
+                            key={song._id}
+                            className={
+                              statusMessage?.songId === song._id
+                                ? statusMessage.type === "success"
+                                  ? "bg-green-50 dark:bg-green-900/10"
+                                  : "bg-red-50 dark:bg-red-900/10"
+                                : ""
+                            }
+                          >
                             <TableCell>
                               <div className="h-12 w-12 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
-                                {song.coverArt ? (
-                                  <img
-                                    src={song.coverArt}
-                                    alt={song.title}
-                                    className="h-full w-full object-cover"
-                                  />
+                                {song.coverArt && song.coverArt.length > 0 ? (
+                                  <div className="relative h-full w-full">
+                                    <Image
+                                      src={song.coverArt as string}
+                                      alt={song.title}
+                                      fill
+                                      sizes="48px"
+                                      className="object-cover"
+                                    />
+                                  </div>
                                 ) : (
                                   <Music className="h-6 w-6 text-muted-foreground" />
                                 )}
@@ -206,15 +287,28 @@ export default function SongsPage() {
                                 >
                                   <Play className="h-4 w-4" />
                                 </Button>
-                                <Button size="icon" variant="ghost">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setSelectedSong(song);
+                                    setEditSongDialogOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className="text-destructive"
+                                  onClick={() => handleDeleteSong(song._id)}
+                                  disabled={deletingSongId === song._id}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  {deletingSongId === song._id ? (
+                                    <span className="animate-spin h-4 w-4 border-2 border-destructive border-t-transparent rounded-full" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
                                 </Button>
                               </div>
                             </TableCell>
@@ -247,6 +341,31 @@ export default function SongsPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Edit Song Dialog */}
+      <EditSongDialog
+        song={selectedSong}
+        isOpen={editSongDialogOpen}
+        onClose={() => {
+          setEditSongDialogOpen(false);
+          setSelectedSong(null);
+        }}
+        onSuccess={() => {
+          // Show success message
+          if (selectedSong) {
+            setStatusMessage({
+              type: "success",
+              message: "Song updated successfully",
+              songId: selectedSong._id,
+            });
+
+            // Clear the status message after 3 seconds
+            setTimeout(() => {
+              setStatusMessage(null);
+            }, 3000);
+          }
+        }}
+      />
     </>
   );
 }
