@@ -54,8 +54,9 @@ export default function CreatorPage() {
   const [activeTab, setActiveTab] = useState("upload");
   const createSong = useMutation(api.music.createSong);
 
+  // Form configuration with validation
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       artistName: "",
@@ -65,7 +66,7 @@ export default function CreatorPage() {
       audioUrl: "",
       coverArt: "",
       isPublic: true,
-    } as FormValues,
+    },
   });
 
   const { isSubmitting } = form.formState;
@@ -172,14 +173,12 @@ export default function CreatorPage() {
                   <TabsContent value="single">
                     <Form {...form}>
                       <form
-                        // @ts-expect-error - TypeScript issues with form submit handler
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-6"
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-6">
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="title"
                               render={({ field }) => (
@@ -197,7 +196,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="artistName"
                               render={({ field }) => (
@@ -220,7 +218,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="releaseYear"
                               render={({ field }) => (
@@ -238,7 +235,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="genres"
                               render={({ field }) => (
@@ -259,7 +255,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="tags"
                               render={({ field }) => (
@@ -280,7 +275,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="isPublic"
                               render={({ field }) => (
@@ -306,7 +300,6 @@ export default function CreatorPage() {
 
                           <div className="space-y-6">
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="audioUrl"
                               render={({ field }) => (
@@ -325,7 +318,6 @@ export default function CreatorPage() {
                             />
 
                             <FormField
-                              // @ts-expect-error - TypeScript issues with form control
                               control={form.control}
                               name="coverArt"
                               render={({ field }) => (
