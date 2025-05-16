@@ -7,7 +7,6 @@ import {
   Heart,
   Mic,
   Layout,
-  Users,
 } from "lucide-react";
 
 const features = [
