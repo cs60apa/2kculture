@@ -25,7 +25,7 @@ export function CallToAction() {
               <div className="flex flex-wrap gap-4">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
+                  className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 hover:from-indigo-600 hover:to-purple-700"
                   onClick={() => router.push("/library")}
                 >
                   Browse music
