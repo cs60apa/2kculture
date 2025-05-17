@@ -17,6 +17,7 @@ interface FileUploaderProps {
   endpoint: "audioUploader" | "imageUploader";
   value?: string;
   className?: string;
+  fileType?: "audio" | "image";
 }
 
 export function FileUploader({
@@ -24,6 +25,7 @@ export function FileUploader({
   endpoint,
   value,
   className,
+  fileType = endpoint === "audioUploader" ? "audio" : "image",
 }: FileUploaderProps) {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
@@ -73,9 +75,8 @@ export function FileUploader({
     },
   });
 
-  const fileType = endpoint === "audioUploader" ? "audio" : "image";
   const fileIcon =
-    endpoint === "audioUploader" ? (
+    fileType === "audio" ? (
       <Music
         className={cn(
           "h-10 w-10",
@@ -95,7 +96,7 @@ export function FileUploader({
     <div className={cn("w-full", className)}>
       {value ? (
         <div className="flex flex-col items-center justify-center space-y-2">
-          {endpoint === "audioUploader" ? (
+          {fileType === "audio" ? (
             <audio src={value} controls className="w-full mt-2" />
           ) : (
             <div className="relative h-20 w-20 overflow-hidden rounded-md">

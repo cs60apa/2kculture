@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Music } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+import { Music, Image as ImageIcon, Tags } from "lucide-react";
 import Image from "next/image";
-import { Song, SongId } from "@/types/song";
+import { Song } from "@/types/song";
 
 import {
   Dialog,
@@ -31,241 +32,237 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { FileUploader } from "@/components/file-uploader";
-
-// Define the form schema
-const editSongSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  genres: z.string().optional(),
-  tags: z.string().optional(),
-  coverArt: z.string().optional(),
-  isPublic: z.boolean(),
-});
-
-type EditSongFormValues = z.infer<typeof editSongSchema>;
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 interface EditSongDialogProps {
-  song: Song | null;
-  isOpen: boolean;
+  song: Song;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
 export function EditSongDialog({
   song,
-  isOpen,
   onClose,
   onSuccess,
 }: EditSongDialogProps) {
+  const { user } = useUser();
+  const [activeTab, setActiveTab] = useState("details");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const updateSong = useMutation(api.music.updateSong);
 
-  // Initialize form with song data
+  // Define the form schema
+  const editSongSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    genres: z.string().optional(),
+    tags: z.string().optional(),
+    coverArt: z.string().optional(),
+    isPublic: z.boolean(),
+  });
+
+  type EditSongFormValues = z.infer<typeof editSongSchema>;
+
+  // Create form
   const form = useForm<EditSongFormValues>({
     resolver: zodResolver(editSongSchema),
     defaultValues: {
       title: song?.title || "",
-      genres: song?.genres ? song.genres.join(", ") : "",
-      tags: song?.tags ? song.tags.join(", ") : "",
+      genres: song?.genres?.join(", ") || "",
+      tags: song?.tags?.join(", ") || "",
       coverArt: song?.coverArt || "",
-      isPublic: Boolean(song?.isPublic),
+      isPublic: song?.isPublic || false,
     },
   });
 
-  // Update form values when song changes
-  useEffect(() => {
-    if (song) {
-      form.reset({
-        title: song.title || "",
-        genres: song.genres ? song.genres.join(", ") : "",
-        tags: song.tags ? song.tags.join(", ") : "",
-        coverArt: song.coverArt || "",
-        isPublic: Boolean(song.isPublic),
-      });
-    }
-  }, [song, form]);
-
-  const onSubmit = async (values: EditSongFormValues) => {
-    if (!song) return;
+  // Handle form submit
+  const onSubmit = async (data: EditSongFormValues) => {
+    if (!song || !user) return;
 
     setIsSubmitting(true);
 
     try {
-      // Convert comma-separated genres and tags to arrays
-      const genres = values.genres
-        ? values.genres
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean)
-        : undefined;
-
-      const tags = values.tags
-        ? values.tags
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean)
-        : undefined;
-
-      // Update song in database
       await updateSong({
-        id: song._id as SongId,
-        artistId: song.artistId,
-        title: values.title,
-        genres,
-        tags,
-        coverArt: values.coverArt,
-        isPublic: values.isPublic,
+        id: song._id as Id<"songs">,
+        title: data.title,
+        coverArt: data.coverArt || undefined,
+        genres: data.genres
+          ? data.genres.split(",").map((g) => g.trim())
+          : undefined,
+        tags: data.tags ? data.tags.split(",").map((t) => t.trim()) : undefined,
+        isPublic: data.isPublic,
+        artistId: user.id,
       });
 
-      // Call success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      // Close the dialog
+      toast.success("Song updated successfully");
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Failed to update song:", error);
+      toast.error("An error occurred while updating the song");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Edit Song Details</DialogTitle>
+          <DialogTitle>Edit Song</DialogTitle>
           <DialogDescription>
-            Update the details of your song. Click save when you&apos;re done.
+            Update the details for your song
           </DialogDescription>
         </DialogHeader>
 
-        {song && (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Song title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="pt-2"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">
+                  <Music className="mr-2 h-4 w-4" />
+                  Details
+                </TabsTrigger>
+                <TabsTrigger value="tags">
+                  <Tags className="mr-2 h-4 w-4" />
+                  Tags
+                </TabsTrigger>
+                <TabsTrigger value="artwork">
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Artwork
+                </TabsTrigger>
+              </TabsList>
 
-              <div className="space-y-1">
-                <FormLabel>Artwork</FormLabel>
-                <div className="flex items-center gap-4">
-                  <div className="h-20 w-20 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
-                    {form.watch("coverArt") ? (
-                      <div className="relative h-full w-full">
-                        <Image
-                          src={form.watch("coverArt") || ""}
-                          alt="Song cover"
-                          fill
-                          sizes="80px"
-                          className="object-cover"
-                        />
+              <TabsContent value="details" className="py-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Song Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter song title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="isPublic"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-md border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel>Publication Status</FormLabel>
+                        <FormDescription>
+                          {field.value
+                            ? "Published - Visible to everyone"
+                            : "Draft - Only visible to you"}
+                        </FormDescription>
                       </div>
-                    ) : (
-                      <Music className="h-8 w-8 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <FileUploader
-                      endpoint="imageUploader"
-                      value={form.watch("coverArt") ?? ""}
-                      onChange={(url) => form.setValue("coverArt", url ?? "")}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Recommended: Square image, at least 500x500px
-                    </p>
-                  </div>
-                </div>
-              </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
 
-              <FormField
-                control={form.control}
-                name="genres"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Genres</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Pop, Hip Hop, Rock, etc."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter genres separated by commas
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Chill, Energetic, Acoustic, etc."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter tags separated by commas
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isPublic"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel>Publish Status</FormLabel>
+              <TabsContent value="tags" className="py-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="genres"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Genres</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter genres (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormDescription>
-                        Published songs are visible to the public. Drafts are
-                        only visible to you.
+                        Example: Hip Hop, Rap, Soul
                       </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Changes"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        )}
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter tags (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Example: chill, summer, vibes
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="artwork" className="py-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="coverArt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cover Art</FormLabel>
+                      {field.value && (
+                        <div className="relative w-32 h-32 mb-4">
+                          <Image
+                            src={field.value}
+                            alt="Cover art"
+                            fill
+                            className="object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      <FormControl>
+                        <FileUploader
+                          endpoint="imageUploader"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fileType="image"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Recommended size: 1400 x 1400 pixels (square)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter className="mt-6">
+              <Button variant="outline" type="button" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
