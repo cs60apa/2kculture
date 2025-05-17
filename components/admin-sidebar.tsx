@@ -27,8 +27,9 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 export function AdminSidebar({
   isOpen = true,
@@ -40,6 +41,18 @@ export function AdminSidebar({
   const { activePage, setActivePage } = useAdmin();
   const router = useRouter();
   const { signOut } = useClerk();
+  const pathname = usePathname();
+
+  // Sync the active page with the current URL when the component mounts
+  useEffect(() => {
+    const path = pathname.split('/').pop();
+    
+    if (pathname === '/admin') {
+      setActivePage('dashboard');
+    } else if (path) {
+      setActivePage(path);
+    }
+  }, [pathname, setActivePage]);
 
   const handleNavigate = (page: string) => {
     setActivePage(page);
