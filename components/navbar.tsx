@@ -18,7 +18,7 @@ export function Navbar() {
   const routes = [
     {
       label: "Discover",
-      href: "/",
+      href: "/discover",
       active: pathname === "/",
     },
     {
