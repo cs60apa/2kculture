@@ -14,9 +14,7 @@ export default function AdminLayout({
     <AdminProvider>
       <AdminAuth>
         <div className="min-h-screen">
-          <AdminDashboardLayout>
-            {children}
-          </AdminDashboardLayout>
+          <AdminDashboardLayout>{children}</AdminDashboardLayout>
           <Toaster />
         </div>
       </AdminAuth>

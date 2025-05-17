@@ -45,10 +45,10 @@ export function AdminSidebar({
 
   // Sync the active page with the current URL when the component mounts
   useEffect(() => {
-    const path = pathname.split('/').pop();
-    
-    if (pathname === '/admin') {
-      setActivePage('dashboard');
+    const path = pathname.split("/").pop();
+
+    if (pathname === "/admin") {
+      setActivePage("dashboard");
     } else if (path) {
       setActivePage(path);
     }

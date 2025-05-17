@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminDashboardLayout } from "@/components/admin-dashboard-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,17 +33,15 @@ import {
 } from "recharts";
 import { useMemo, useState } from "react";
 import {
-  Calendar,
-  ChevronDown,
   Download,
   FileText,
-  ListFilter,
   Monitor,
   RefreshCw,
   Smartphone,
   Tablet,
   TrendingUp,
-  Users,
+  Music,
+  Pencil,
 } from "lucide-react";
 import {
   Select,
@@ -73,16 +70,15 @@ export default function AnalyticsPage() {
     user?.id ? { artistId: user.id } : "skip"
   );
 
-  // Get published songs count
-  const publishedSongs = useQuery(
-    api.music.getPublishedSongsByArtist,
-    user?.id ? { artistId: user.id } : "skip"
+  // Calculate published and draft songs counts directly from userSongs
+  const publishedSongsCount = useMemo(() => 
+    userSongs?.filter(song => song.isPublic).length || 0, 
+    [userSongs]
   );
-
-  // Get draft songs count
-  const draftSongs = useQuery(
-    api.music.getDraftSongsByArtist,
-    user?.id ? { artistId: user.id } : "skip"
+  
+  const draftSongsCount = useMemo(() => 
+    userSongs?.filter(song => !song.isPublic).length || 0, 
+    [userSongs]
   );
 
   // Calculate total plays
@@ -220,7 +216,7 @@ export default function AnalyticsPage() {
   );
 
   return (
-    <AdminDashboardLayout>
+    <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
@@ -285,16 +281,33 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Unique Listeners
+              Published Songs
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Music className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Math.floor(totalPlays * 0.7).toLocaleString()}
+              {publishedSongsCount}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">↑ 12.5%</span> from last month
+              {publishedSongsCount === 1 ? "1 song public" : `${publishedSongsCount} songs public`}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Draft Songs
+            </CardTitle>
+            <Pencil className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {draftSongsCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {draftSongsCount === 1 ? "1 song in draft" : `${draftSongsCount} songs in draft`}
             </p>
           </CardContent>
         </Card>
@@ -312,21 +325,6 @@ export default function AnalyticsPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-500">↑ 8.3%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completion Rate
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">78%</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">↑ 5.2%</span> from last month
             </p>
           </CardContent>
         </Card>
@@ -503,7 +501,6 @@ export default function AnalyticsPage() {
                   >
                     <RadialBar
                       background
-                      clockWise
                       dataKey="value"
                       label={{
                         position: "insideStart",
@@ -686,6 +683,6 @@ export default function AnalyticsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </AdminDashboardLayout>
+    </>
   );
 }

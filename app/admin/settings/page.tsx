@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminDashboardLayout } from "@/components/admin-dashboard-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,7 +46,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <AdminDashboardLayout>
+    <>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
@@ -339,6 +338,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </AdminDashboardLayout>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminDashboardLayout } from "@/components/admin-dashboard-layout";
 import { FileUploader } from "@/components/file-uploader";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,7 +155,7 @@ export default function ContentStudioPage() {
   };
 
   return (
-    <AdminDashboardLayout>
+    <>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Content Studio</h2>
@@ -569,6 +568,6 @@ export default function ContentStudioPage() {
           )}
         </div>
       </div>
-    </AdminDashboardLayout>
+    </>
   );
 }
