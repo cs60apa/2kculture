@@ -1,6 +1,6 @@
 "use client";
 
-import { useAdmin } from "@/components/providers/admin-provider";
+import { useAdmin } from "@/components/providers/admin-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,22 +23,15 @@ import {
   User,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useUser } from "@clerk/nextjs";
-import { useSignOut } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function AdminHeader({
-  toggleSidebar,
-  isSidebarOpen,
-}: {
-  toggleSidebar?: () => void;
-  isSidebarOpen?: boolean;
-}) {
+export function AdminHeader({ toggleSidebar }: { toggleSidebar?: () => void }) {
   const { activePage } = useAdmin();
   const { user } = useUser();
-  const { signOut } = useSignOut();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   // Function to get page title based on active page

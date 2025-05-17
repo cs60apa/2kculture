@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminProvider } from "@/components/providers/admin-provider";
+import { AdminProvider } from "@/components/providers/admin-context";
 import { AdminAuth } from "@/components/admin-auth";
 import { Toaster } from "@/components/ui/sonner";
 

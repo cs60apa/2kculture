@@ -1,6 +1,6 @@
 "use client";
 
-import { useAdmin } from "@/components/providers/admin-provider";
+import { useAdmin } from "@/components/providers/admin-context";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,6 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarSeparator,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 
 export function AdminSidebar({
   isOpen = true,
@@ -39,6 +39,7 @@ export function AdminSidebar({
 }) {
   const { activePage, setActivePage } = useAdmin();
   const router = useRouter();
+  const { signOut } = useClerk();
 
   const handleNavigate = (page: string) => {
     setActivePage(page);
@@ -132,8 +133,7 @@ export function AdminSidebar({
               variant="ghost"
               className="w-full justify-start text-muted-foreground"
               onClick={async () => {
-                const { signOut } = await import("@clerk/nextjs");
-                signOut();
+                await signOut();
                 router.push("/sign-in");
               }}
             >
