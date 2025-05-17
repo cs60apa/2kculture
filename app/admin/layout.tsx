@@ -3,6 +3,7 @@
 import { AdminProvider } from "@/components/providers/admin-context";
 import { AdminAuth } from "@/components/admin-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { AdminDashboardLayout } from "@/components/admin-dashboard-layout";
 
 export default function AdminLayout({
   children,
@@ -13,7 +14,9 @@ export default function AdminLayout({
     <AdminProvider>
       <AdminAuth>
         <div className="min-h-screen">
-          {children}
+          <AdminDashboardLayout>
+            {children}
+          </AdminDashboardLayout>
           <Toaster />
         </div>
       </AdminAuth>
