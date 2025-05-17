@@ -71,13 +71,13 @@ export default function AnalyticsPage() {
   );
 
   // Calculate published and draft songs counts directly from userSongs
-  const publishedSongsCount = useMemo(() => 
-    userSongs?.filter(song => song.isPublic).length || 0, 
+  const publishedSongsCount = useMemo(
+    () => userSongs?.filter((song) => song.isPublic).length || 0,
     [userSongs]
   );
-  
-  const draftSongsCount = useMemo(() => 
-    userSongs?.filter(song => !song.isPublic).length || 0, 
+
+  const draftSongsCount = useMemo(
+    () => userSongs?.filter((song) => !song.isPublic).length || 0,
     [userSongs]
   );
 
@@ -286,28 +286,26 @@ export default function AnalyticsPage() {
             <Music className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {publishedSongsCount}
-            </div>
+            <div className="text-2xl font-bold">{publishedSongsCount}</div>
             <p className="text-xs text-muted-foreground">
-              {publishedSongsCount === 1 ? "1 song public" : `${publishedSongsCount} songs public`}
+              {publishedSongsCount === 1
+                ? "1 song public"
+                : `${publishedSongsCount} songs public`}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Draft Songs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Draft Songs</CardTitle>
             <Pencil className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {draftSongsCount}
-            </div>
+            <div className="text-2xl font-bold">{draftSongsCount}</div>
             <p className="text-xs text-muted-foreground">
-              {draftSongsCount === 1 ? "1 song in draft" : `${draftSongsCount} songs in draft`}
+              {draftSongsCount === 1
+                ? "1 song in draft"
+                : `${draftSongsCount} songs in draft`}
             </p>
           </CardContent>
         </Card>
