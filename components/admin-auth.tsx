@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function AdminAuth({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -14,7 +14,8 @@ export function AdminAuth({ children }: { children: React.ReactNode }) {
     }
   }, [isLoaded, isSignedIn, router]);
 
-  if (!isLoaded || !isSignedIn) {
+  // Show a loading state while authentication is checking
+  if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-4">
@@ -25,5 +26,7 @@ export function AdminAuth({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Allow the content to render
   return <>{children}</>;
 }
+

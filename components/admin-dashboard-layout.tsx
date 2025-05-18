@@ -2,7 +2,6 @@
 
 import { AdminHeader } from "@/components/admin-header";
 import { AdminSidebar } from "@/components/admin-sidebar";
-import { SidebarInset } from "@/components/ui/sidebar";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -27,9 +26,9 @@ export function AdminDashboardLayout({
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <AdminHeader toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <SidebarInset>
-          <div className="p-4 sm:p-6 overflow-auto">{children}</div>
-        </SidebarInset>
+        <div className="p-4 sm:p-6 overflow-auto h-[calc(100vh-4rem)]">
+          {children}
+        </div>
       </div>
     </div>
   );

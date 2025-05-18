@@ -67,7 +67,7 @@ export function AdminSidebar({
   return (
     <SidebarProvider defaultOpen={isOpen}>
       <Sidebar
-        className={`transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-[80px]"}`}
+        className={`fixed left-0 top-0 z-40 h-full transition-all duration-300 ${isOpen ? "translate-x-0 w-full md:w-64" : "-translate-x-full md:translate-x-0 md:w-[80px]"}`}
       >
         <SidebarHeader className="pt-4">
           <div className="flex items-center gap-2 px-4">
