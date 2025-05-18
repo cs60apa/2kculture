@@ -29,4 +29,3 @@ export function AdminAuth({ children }: { children: React.ReactNode }) {
   // Allow the content to render
   return <>{children}</>;
 }
-
