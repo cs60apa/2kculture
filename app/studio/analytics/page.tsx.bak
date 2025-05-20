@@ -1,0 +1,831 @@
+"use client";
+
+import React, { useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
+import { 
+  Calendar, 
+  LineChar    const startDate = new Date();
+    const endDate = new Date();
+    
+    if (timeFrame === "7days") {
+      startDate.setDate(endDate.getDate() - 7);
+    } else if (timeFrame === "30days") {
+      startDate.setDate(endDate.getDate() - 30);
+    } else if (timeFrame === "90days") {
+      startDate.setDate(endDate.getDate() - 90);
+    } else {
+      startDate.setFullYear(endDate.getFullYear() - 1);
+    }wnUp,
+  Music, 
+  Play, 
+  Heart,
+  User,
+  Globe,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight
+} from "lucide-react";
+import Image from "next/image";
+
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  BarElement,
+  Title, 
+  Tooltip, 
+  Legend,
+  ArcElement
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+export default function AnalyticsPage() {
+  const router = useRouter();
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [timeFrame, setTimeFrame] = useState<"7days" | "30days" | "90days" | "year">("30days");
+  
+  // Fetch songs by the current artist
+  const allSongs = useQuery(
+    api.music.getSongsByArtist,
+    isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
+  ) || [];
+  
+  // Fetch songs and sort by plays to get popular songs
+  const allSongsForPopular = useQuery(
+    api.music.getSongsByArtist,
+    isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
+  ) || [];
+  
+  // Sort by plays to get popular songs
+  const popularSongs = [...allSongsForPopular].sort((a, b) => (b.plays || 0) - (a.plays || 0));
+
+  // Total metrics
+  const totalSongs = allSongs.length;
+  const totalPlays = allSongs.reduce((sum, song) => sum + (song.plays || 0), 0);
+  const totalLikes = allSongs.reduce((sum, song) => sum + (song.likes || 0), 0);
+  
+  // Average engagement metrics
+  const avgPlaysPerSong = totalSongs > 0 ? Math.round(totalPlays / totalSongs) : 0;
+  const avgLikesPerSong = totalSongs > 0 ? Math.round(totalLikes / totalSongs) : 0;
+  const engagementRate = totalPlays > 0 ? Math.round((totalLikes / totalPlays) * 100) : 0;
+
+  // Generate sample data based on timeframe - in a real app, you would fetch this from your API
+  const generateTimeLabels = () => {
+    const labels = [];
+    const now = new Date();
+    
+    if (timeFrame === "7days") {
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(now.getDate() - i);
+        labels.push(date.toLocaleDateString("en-US", { weekday: 'short' }));
+      }
+    } else if (timeFrame === "30days") {
+      for (let i = 29; i >= 0; i -= 3) {
+        const date = new Date();
+        date.setDate(now.getDate() - i);
+        labels.push(date.toLocaleDateString("en-US", { month: 'short', day: 'numeric' }));
+      }
+    } else if (timeFrame === "90days") {
+      for (let i = 90; i >= 0; i -= 10) {
+        const date = new Date();
+        date.setDate(now.getDate() - i);
+        labels.push(date.toLocaleDateString("en-US", { month: 'short', day: 'numeric' }));
+      }
+    } else {
+      // Year
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(now.getMonth() - i);
+        labels.push(date.toLocaleDateString("en-US", { month: 'short' }));
+      }
+    }
+    
+    return labels;
+  };
+  
+  // Generate sample data - would be replaced with real data from your backend
+  const generateSampleData = (max: number, trend: "up" | "down" | "fluctuate" | "stable" = "up") => {
+    const length = timeFrame === "7days" ? 7 : 
+                   timeFrame === "30days" ? 11 : 
+                   timeFrame === "90days" ? 10 : 12;
+    
+    const data = [];
+    let value = trend === "down" ? max : Math.round(max * 0.3);
+    
+    for (let i = 0; i < length; i++) {
+      if (trend === "up") {
+        value += Math.random() * (max * 0.1);
+        if (value > max) value = max;
+      } else if (trend === "down") {
+        value -= Math.random() * (max * 0.1);
+        if (value < 0) value = 0;
+      } else if (trend === "fluctuate") {
+        value += (Math.random() - 0.5) * (max * 0.2);
+        if (value > max) value = max;
+        if (value < 0) value = 0;
+      }
+      // stable - do nothing to value
+      
+      data.push(Math.round(value));
+    }
+    
+    return data;
+  };
+
+  // Chart data
+  const playsChartData = {
+    labels: generateTimeLabels(),
+    datasets: [
+      {
+        label: 'Song Plays',
+        data: generateSampleData(totalPlays * 0.2, "up"),
+        fill: false,
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgb(59, 130, 246)',
+        tension: 0.3
+      },
+    ],
+  };
+  
+  const likesChartData = {
+    labels: generateTimeLabels(),
+    datasets: [
+      {
+        label: 'Likes',
+        data: generateSampleData(totalLikes * 0.15, "fluctuate"),
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgb(239, 68, 68)',
+        tension: 0.3
+      },
+    ],
+  };
+  
+  const engagementData = {
+    labels: popularSongs.slice(0, 5).map(song => song.title),
+    datasets: [
+      {
+        label: 'Engagement Rate %',
+        data: popularSongs.slice(0, 5).map(song => 
+          song.plays ? Math.round((song.likes || 0) / song.plays * 100) : 0
+        ),
+        backgroundColor: 'rgb(168, 85, 247)',
+      },
+    ],
+  };
+  
+  const audienceDemographicData = {
+    labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
+    datasets: [
+      {
+        data: [35, 40, 15, 7, 3],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.7)', // blue
+          'rgba(168, 85, 247, 0.7)', // purple
+          'rgba(236, 72, 153, 0.7)', // pink
+          'rgba(249, 115, 22, 0.7)', // orange
+          'rgba(16, 185, 129, 0.7)', // green
+        ],
+        borderColor: [
+          'rgb(59, 130, 246)',
+          'rgb(168, 85, 247)',
+          'rgb(236, 72, 153)',
+          'rgb(249, 115, 22)',
+          'rgb(16, 185, 129)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const geographicDistributionData = {
+    labels: ['United States', 'United Kingdom', 'Germany', 'Canada', 'Australia', 'Other'],
+    datasets: [
+      {
+        data: [45, 20, 10, 8, 5, 12],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.7)', // blue
+          'rgba(168, 85, 247, 0.7)', // purple
+          'rgba(236, 72, 153, 0.7)', // pink
+          'rgba(249, 115, 22, 0.7)', // orange
+          'rgba(16, 185, 129, 0.7)', // green
+          'rgba(107, 114, 128, 0.7)', // gray
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Format date
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", { 
+      year: "numeric", 
+      month: "long", 
+      day: "numeric" 
+    });
+  };
+
+  // Get date range text
+  const getDateRangeText = () => {
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    if (timeFrame === "7days") {
+      startDate.setDate(endDate.getDate() - 7);
+    } else if (timeFrame === "30days") {
+      startDate.setDate(endDate.getDate() - 30);
+    } else if (timeFrame === "90days") {
+      startDate.setDate(endDate.getDate() - 90);
+    } else {
+      startDate.setFullYear(endDate.getFullYear() - 1);
+    }
+    
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  };
+
+  // Redirect if not signed in
+  if (isLoaded && !isSignedIn) {
+    router.push("/");
+    return null;
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">Track your music's performance and audience</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={timeFrame} onValueChange={(value: "7days" | "30days" | "90days" | "year") => setTimeFrame(value)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Select timeframe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="90days">Last 90 days</SelectItem>
+              <SelectItem value="year">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="text-sm text-muted-foreground">
+        Showing data for: <span className="font-medium">{getDateRangeText()}</span>
+      </div>
+      
+      {/* Key metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Plays</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{totalPlays.toLocaleString()}</div>
+              <div className="flex items-center text-green-500 text-sm">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span>+12%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Likes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{totalLikes.toLocaleString()}</div>
+              <div className="flex items-center text-green-500 text-sm">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span>+8%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Average Plays</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{avgPlaysPerSong.toLocaleString()}</div>
+              <div className="flex items-center text-red-500 text-sm">
+                <TrendingDown className="h-4 w-4 mr-1" />
+                <span>-3%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Engagement Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{engagementRate}%</div>
+              <div className="flex items-center text-green-500 text-sm">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span>+5%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Main charts */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="songs">Song Performance</TabsTrigger>
+          <TabsTrigger value="audience">Audience</TabsTrigger>
+        </TabsList>
+        
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Plays Over Time</CardTitle>
+                <CardDescription>
+                  Track your song's listens over {timeFrame === "year" ? "the last year" : `the last ${timeFrame}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <Line 
+                    data={playsChartData} 
+                    options={{
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                        },
+                      },
+                    }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Likes Over Time</CardTitle>
+                <CardDescription>
+                  Track your engagement over {timeFrame === "year" ? "the last year" : `the last ${timeFrame}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <Line 
+                    data={likesChartData} 
+                    options={{
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false,
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                        },
+                      },
+                    }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Performing Songs</CardTitle>
+              <CardDescription>Your most popular songs by plays</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">Rank</TableHead>
+                      <TableHead>Song</TableHead>
+                      <TableHead className="text-right">Plays</TableHead>
+                      <TableHead className="text-right">Likes</TableHead>
+                      <TableHead className="text-right">Engagement</TableHead>
+                      <TableHead className="text-right">Trend</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {popularSongs.slice(0, 5).map((song, index) => (
+                      <TableRow key={song._id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 relative rounded overflow-hidden">
+                              {song.coverArt ? (
+                                <Image
+                                  src={song.coverArt}
+                                  alt={song.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="flex items-center justify-center h-full w-full bg-muted">
+                                  <Music className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">{song.title}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">{song.plays || 0}</TableCell>
+                        <TableCell className="text-right">{song.likes || 0}</TableCell>
+                        <TableCell className="text-right">
+                          {song.plays ? Math.round((song.likes || 0) / song.plays * 100) : 0}%
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge className="bg-green-500">
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                            +{Math.floor(Math.random() * 20) + 5}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {popularSongs.length > 5 && (
+                <div className="flex justify-end mt-4">
+                  <Button variant="ghost" size="sm" onClick={() => router.push('/studio/songs')}>
+                    View All Songs <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Song Performance Tab */}
+        <TabsContent value="songs" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Song Engagement Rate</CardTitle>
+                <CardDescription>Likes as a percentage of plays for top songs</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center">
+                <Bar 
+                  data={engagementData} 
+                  options={{
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                          callback: function(value) {
+                            return value + '%';
+                          }
+                        }
+                      }
+                    },
+                  }} 
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Average Listening Duration</CardTitle>
+                <CardDescription>How long listeners stay on each song</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-8">
+                  {popularSongs.slice(0, 5).map((song, index) => {
+                    // Calculate completion rate - this would come from real data in production
+                    const completionRate = Math.floor(70 + Math.random() * 30);
+                    const avgDuration = Math.floor((song.duration || 180) * (completionRate / 100));
+                    const minutes = Math.floor(avgDuration / 60);
+                    const seconds = avgDuration % 60;
+                    
+                    return (
+                      <div key={song._id} className="space-y-2">
+                        <div className="flex justify-between">
+                          <div className="font-medium truncate pr-4 max-w-[70%]">{song.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {completionRate}% completion
+                          </div>
+                        </div>
+                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500 rounded-full" 
+                            style={{ width: `${completionRate}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <div>Avg. {minutes}:{seconds.toString().padStart(2, '0')}</div>
+                          <div>{(song.duration ? Math.floor(song.duration / 60) : 3)}:
+                            {(song.duration ? song.duration % 60 : 0).toString().padStart(2, '0')} total
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Listener Behavior</CardTitle>
+              <CardDescription>How users interact with your music</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium">Repeat Listens</div>
+                    <Play className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="text-3xl font-bold">28%</div>
+                  <div className="text-sm text-muted-foreground">
+                    Percentage of listeners who play your songs multiple times
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium">Full Song Listens</div>
+                    <Clock className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <div className="text-3xl font-bold">76%</div>
+                  <div className="text-sm text-muted-foreground">
+                    Percentage of listeners who finish your songs
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium">Engagement</div>
+                    <Heart className="h-4 w-4 text-red-500" />
+                  </div>
+                  <div className="text-3xl font-bold">{engagementRate}%</div>
+                  <div className="text-sm text-muted-foreground">
+                    Likes to plays ratio across all songs
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Audience Tab */}
+        <TabsContent value="audience" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Age Demographics</CardTitle>
+                <CardDescription>Age breakdown of your listeners</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center justify-center">
+                <div className="h-[250px] w-[250px]">
+                  <Doughnut 
+                    data={audienceDemographicData} 
+                    options={{
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Geographic Distribution</CardTitle>
+                <CardDescription>Where your listeners are coming from</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center justify-center">
+                <div className="h-[250px] w-[250px]">
+                  <Doughnut 
+                    data={geographicDistributionData} 
+                    options={{
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Listener Growth</CardTitle>
+                <CardDescription>Tracking your audience growth over time</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <Bar 
+                  data={{
+                    labels: generateTimeLabels(),
+                    datasets: [
+                      {
+                        label: 'New Listeners',
+                        data: generateSampleData(500, "up"),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                      },
+                      {
+                        label: 'Returning Listeners',
+                        data: generateSampleData(350, "up"),
+                        backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                      },
+                    ],
+                  }} 
+                  options={{
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                      },
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        stacked: true,
+                      },
+                      x: {
+                        stacked: true,
+                      }
+                    },
+                  }} 
+                />
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Listener Sources</CardTitle>
+              <CardDescription>Where your listeners are finding your music</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Source</TableHead>
+                      <TableHead className="text-right">Listeners</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
+                      <TableHead className="text-right">Growth</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <Globe className="h-4 w-4 mr-2 text-blue-500" />
+                          Direct Traffic
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">1,245</TableCell>
+                      <TableCell className="text-right">42%</TableCell>
+                      <TableCell className="text-right">
+                        <Badge className="bg-green-500">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          +15%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2 text-purple-500" />
+                          Social Media
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">845</TableCell>
+                      <TableCell className="text-right">28%</TableCell>
+                      <TableCell className="text-right">
+                        <Badge className="bg-green-500">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          +24%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <Music className="h-4 w-4 mr-2 text-green-500" />
+                          Playlists
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">620</TableCell>
+                      <TableCell className="text-right">21%</TableCell>
+                      <TableCell className="text-right">
+                        <Badge className="bg-green-500">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          +8%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <LineChart className="h-4 w-4 mr-2 text-red-500" />
+                          Search
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">287</TableCell>
+                      <TableCell className="text-right">9%</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline">
+                          <ArrowDownUp className="h-3 w-3 mr-1" />
+                          0%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

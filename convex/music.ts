@@ -46,6 +46,48 @@ export const getUser = query({
   },
 });
 
+export const updateUser = mutation({
+  args: {
+    userId: v.string(),
+    name: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    website: v.optional(v.string()),
+    location: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Create update object with only the fields that were provided
+    const updateFields: Partial<{
+      name: string;
+      imageUrl: string;
+      bio: string;
+      website: string;
+      location: string;
+    }> = {};
+
+    if (args.name !== undefined) updateFields.name = args.name;
+    if (args.imageUrl !== undefined) updateFields.imageUrl = args.imageUrl;
+    if (args.bio !== undefined) updateFields.bio = args.bio;
+    if (args.website !== undefined) updateFields.website = args.website;
+    if (args.location !== undefined) updateFields.location = args.location;
+
+    // Update the user
+    await ctx.db.patch(user._id, updateFields);
+
+    // Return the updated user
+    return await ctx.db.get(user._id);
+  },
+});
+
 // SONG RELATED FUNCTIONS
 export const createSong = mutation({
   args: {
@@ -288,6 +330,7 @@ export const createAlbum = mutation({
     coverArt: v.optional(v.string()),
     genres: v.optional(v.array(v.string())),
     description: v.optional(v.string()),
+    isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -307,9 +350,72 @@ export const createAlbum = mutation({
       genres: args.genres,
       description: args.description,
       releaseDate: Date.now(),
+      isPublic: args.isPublic ?? true,
     });
 
     return albumId;
+  },
+});
+
+// Delete an album
+export const deleteAlbum = mutation({
+  args: {
+    id: v.id("albums"),
+    artistId: v.string(), // For permission checking
+  },
+  handler: async (ctx, args) => {
+    const album = await ctx.db.get(args.id);
+
+    if (!album) {
+      throw new Error("Album not found");
+    }
+
+    // Verify that the user is the artist who owns this album
+    if (album.artistId !== args.artistId) {
+      throw new Error("Not authorized to delete this album");
+    }
+
+    // Delete all songs in this album
+    const albumSongs = await ctx.db
+      .query("songs")
+      .withIndex("by_albumId", (q) => q.eq("albumId", args.id))
+      .collect();
+    
+    for (const song of albumSongs) {
+      await ctx.db.delete(song._id);
+    }
+
+    // Delete the album
+    await ctx.db.delete(args.id);
+
+    return { success: true };
+  },
+});
+
+// Toggle album publication status
+export const toggleAlbumPublicationStatus = mutation({
+  args: {
+    id: v.id("albums"),
+    artistId: v.string(), // For permission checking
+    isPublic: v.boolean(), // The new publication status
+  },
+  handler: async (ctx, args) => {
+    const album = await ctx.db.get(args.id);
+
+    if (!album) {
+      throw new Error("Album not found");
+    }
+
+    // Verify that the user is the artist who owns this album
+    if (album.artistId !== args.artistId) {
+      throw new Error("Not authorized to edit this album");
+    }
+
+    // Update the publication status
+    await ctx.db.patch(args.id, { isPublic: args.isPublic });
+
+    // Return the updated album
+    return await ctx.db.get(args.id);
   },
 });
 

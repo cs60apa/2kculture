@@ -79,15 +79,15 @@ export function Navbar() {
                 Analytics
               </Link>
               <Link
-                href="/creator"
+                href="/studio"
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md",
-                  pathname.startsWith("/creator")
+                  pathname.startsWith("/studio")
                     ? "text-black dark:text-white bg-black/10 dark:bg-white/10"
                     : "text-muted-foreground"
                 )}
               >
-                Creator Studio
+                Studio
               </Link>
             </>
           )}
