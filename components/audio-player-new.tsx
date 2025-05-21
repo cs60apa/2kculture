@@ -15,19 +15,20 @@ import {
   Shuffle,
   Music,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 
 interface AudioPlayerProps {
   src: string;
   title: string;
   artist: string;
   coverArt?: string;
-  songId?: string;
+  songId?: Id<"songs">;
+  // Keeping artistId for potential future use
   artistId?: string;
   onNext?: () => void;
   onPrevious?: () => void;
@@ -40,6 +41,8 @@ export const AudioPlayer = ({
   artist,
   coverArt,
   songId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  artistId,
   onNext,
   onPrevious,
   className,
@@ -53,9 +56,26 @@ export const AudioPlayer = ({
   const [repeat, setRepeat] = useState(false);
   const [shuffle, setShuffle] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
 
   const soundRef = useRef<Howl | null>(null);
   const seekIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track play when song starts
+  useEffect(() => {
+    if (playing && songId && !hasTrackedPlay) {
+      trackPlay({
+        songId: songId as Id<"songs">,
+        userId: undefined,
+      });
+      setHasTrackedPlay(true);
+    }
+  }, [playing, songId, trackPlay, hasTrackedPlay]);
+
+  // Reset hasTrackedPlay when song changes
+  useEffect(() => {
+    setHasTrackedPlay(false);
+  }, [src]);
 
   // Initialize howler with the audio source
   useEffect(() => {
@@ -97,7 +117,7 @@ export const AudioPlayer = ({
         }
       };
     }
-  }, [src, repeat, onNext, volume]);
+  }, [src, volume, repeat, onNext]);
 
   // Handle play/pause toggle
   const togglePlay = () => {
@@ -165,17 +185,6 @@ export const AudioPlayer = ({
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
-
-  // Track play when song starts
-  useEffect(() => {
-    if (playing && songId) {
-      trackPlay({
-        songId: songId as Id<"songs">,
-        userId: undefined, // This is optional according to the type error
-      });
-    }
-  }, [playing, songId, trackPlay]);
-
 
   return (
     <div

@@ -125,6 +125,8 @@ export const createSong = mutation({
       tags: args.tags,
       plays: 0,
       likes: 0,
+      shares: 0,
+      comments: 0,
       releaseDate: args.releaseDate || Date.now(), // Use provided date or current timestamp
       isPublic: args.isPublic,
     });
@@ -613,5 +615,126 @@ export const toggleLike = mutation({
     });
 
     return { liked: true };
+  },
+});
+
+// ANALYTICS FUNCTIONS
+export const getPlayAnalytics = query({
+  args: {
+    artistId: v.string(),
+    timeframe: v.union(
+      v.literal("7days"),
+      v.literal("30days"),
+      v.literal("90days"),
+      v.literal("year")
+    ),
+  },
+  handler: async (ctx, { artistId, timeframe }) => {
+    const now = new Date();
+    const startDate = new Date();
+
+    // Calculate start date based on timeframe
+    switch (timeframe) {
+      case "7days":
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "30days":
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "90days":
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case "year":
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    // Get all plays for this artist's songs within the timeframe
+    const plays = await ctx.db
+      .query("plays")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("artistId"), artistId),
+          q.gte(q.field("timestamp"), startDate.getTime())
+        )
+      )
+      .collect();
+
+    return plays;
+  },
+});
+
+// Query to get engagement analytics
+export const getEngagementAnalytics = query({
+  args: {
+    artistId: v.string(),
+    timeframe: v.union(
+      v.literal("7days"),
+      v.literal("30days"),
+      v.literal("90days"),
+      v.literal("year")
+    ),
+  },
+  handler: async (ctx, { artistId, timeframe }) => {
+    const now = new Date();
+    const startDate = new Date();
+
+    // Calculate start date based on timeframe
+    switch (timeframe) {
+      case "7days":
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "30days":
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "90days":
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case "year":
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    // Get all engagement events within the timeframe
+    const engagement = await ctx.db
+      .query("engagement")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("artistId"), artistId),
+          q.gte(q.field("timestamp"), startDate.getTime())
+        )
+      )
+      .collect();
+
+    return engagement;
+  },
+});
+
+// Track play in analytics
+export const trackPlay = mutation({
+  args: {
+    songId: v.id("songs"),
+    userId: v.optional(v.string()),
+  },
+  handler: async (ctx, { songId, userId }) => {
+    const song = await ctx.db.get(songId);
+    if (!song) {
+      throw new Error("Song not found");
+    }
+
+    // Record the play
+    await ctx.db.insert("plays", {
+      songId,
+      artistId: song.artistId,
+      userId,
+      timestamp: Date.now(),
+    });
+
+    // Increment the play count on the song
+    await ctx.db.patch(songId, {
+      plays: (song.plays || 0) + 1,
+    });
+
+    return { success: true };
   },
 });

@@ -28,6 +28,8 @@ export default defineSchema({
     tags: v.optional(v.array(v.string())),
     plays: v.number(), // play count
     likes: v.number(), // like count
+    shares: v.number(), // share count
+    comments: v.number(), // comment count
     releaseDate: v.number(), // timestamp
     isPublic: v.boolean(), // whether the song is published
   })
@@ -95,4 +97,30 @@ export default defineSchema({
     timestamp: v.number(),
     completed: v.boolean(), // Whether song was fully listened to
   }).index("by_user_time", ["userId", "timestamp"]),
+
+  // Analytics: Plays table
+  plays: defineTable({
+    songId: v.id("songs"),
+    artistId: v.string(), // references users.userId
+    userId: v.optional(v.string()), // references users.userId, optional for anonymous plays
+    timestamp: v.number(), // when the play occurred
+  })
+    .index("by_songId", ["songId"])
+    .index("by_artistId", ["artistId"])
+    .index("by_userId", ["userId"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Analytics: Engagement table (likes, shares, etc.)
+  engagement: defineTable({
+    songId: v.id("songs"),
+    artistId: v.string(), // references users.userId
+    userId: v.string(), // references users.userId
+    type: v.string(), // 'like', 'share', etc.
+    timestamp: v.number(), // when the engagement occurred
+  })
+    .index("by_songId", ["songId"])
+    .index("by_artistId", ["artistId"])
+    .index("by_userId", ["userId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_type", ["type"]),
 });

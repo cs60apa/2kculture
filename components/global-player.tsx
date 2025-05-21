@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Howl } from "howler";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -40,7 +41,8 @@ export function GlobalPlayer() {
   const [queueOpen, setQueueOpen] = useState(false);
   const soundRef = useRef<Howl | null>(null);
   const seekIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const incrementPlayCount = useMutation(api.music.incrementPlayCount);
+  const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
+  const trackPlay = useMutation(api.music.trackPlay);
 
   // Player store state
   const {
@@ -50,8 +52,6 @@ export function GlobalPlayer() {
     muted,
     repeat,
     shuffle,
-    queue,
-    queueIndex,
     togglePlay,
     playNext,
     playPrevious,
@@ -59,27 +59,24 @@ export function GlobalPlayer() {
     toggleShuffle,
     setVolume,
     toggleMute,
-    removeFromQueue,
   } = usePlayerStore();
 
   // Initialize howler with the audio source when the song changes
   useEffect(() => {
     if (currentSong) {
-      // Clean up previous sound instance
       if (soundRef.current) {
         soundRef.current.unload();
       }
 
-      // Create new instance
       const sound = new Howl({
         src: [currentSong.audioUrl],
         html5: true,
         volume: muted ? 0 : volume,
         onload: () => {
-          // Log play count once
-          if (currentSong._id) {
-            incrementPlayCount({
+          if (currentSong._id && user?.id) {
+            trackPlay({
               songId: currentSong._id as Id<"songs">,
+              userId: user.id,
             }).catch(console.error);
           }
         },
@@ -90,11 +87,9 @@ export function GlobalPlayer() {
 
       soundRef.current = sound;
 
-      // Start playing if isPlaying is true
       if (isPlaying) {
         sound.play();
 
-        // Start seek interval
         seekIntervalRef.current = setInterval(() => {
           if (!seeking) {
             setCurrentTime(sound.seek() || 0);
@@ -102,7 +97,6 @@ export function GlobalPlayer() {
         }, 1000);
       }
 
-      // Clean up on unmount or when song changes
       return () => {
         if (soundRef.current) {
           soundRef.current.unload();
@@ -112,7 +106,16 @@ export function GlobalPlayer() {
         }
       };
     }
-  }, [currentSong, incrementPlayCount]);
+  }, [
+    currentSong,
+    isPlaying,
+    muted,
+    playNext,
+    seeking,
+    trackPlay,
+    user?.id,
+    volume,
+  ]);
 
   // Handle play/pause changes
   useEffect(() => {
@@ -136,7 +139,7 @@ export function GlobalPlayer() {
         seekIntervalRef.current = null;
       }
     }
-  }, [isPlaying]);
+  }, [isPlaying, seeking]);
 
   // Handle volume/mute changes
   useEffect(() => {
@@ -161,6 +164,28 @@ export function GlobalPlayer() {
     setSeeking(false);
   };
 
+  // Track play when song starts
+  useEffect(() => {
+    if (
+      isPlaying &&
+      currentSong &&
+      currentSong._id &&
+      !hasTrackedPlay &&
+      user?.id
+    ) {
+      trackPlay({
+        songId: currentSong._id as Id<"songs">,
+        userId: user.id,
+      });
+      setHasTrackedPlay(true);
+    }
+  }, [isPlaying, currentSong, trackPlay, hasTrackedPlay, user?.id]);
+
+  // Reset hasTrackedPlay when song changes
+  useEffect(() => {
+    setHasTrackedPlay(false);
+  }, [currentSong?._id]);
+
   // Format the song duration
   const duration = currentSong?.duration || soundRef.current?.duration() || 0;
 
@@ -180,10 +205,12 @@ export function GlobalPlayer() {
             <div className="flex items-center gap-3 w-1/4">
               <div className="h-10 w-10 bg-secondary rounded-md overflow-hidden flex-shrink-0">
                 {currentSong.coverArt ? (
-                  <img
+                  <Image
                     src={currentSong.coverArt}
                     alt={currentSong.title}
                     className="h-full w-full object-cover"
+                    width={40}
+                    height={40}
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-purple-400/30 to-indigo-600/30">
@@ -277,10 +304,13 @@ export function GlobalPlayer() {
             <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto px-4 gap-8">
               <div className="w-full aspect-square bg-secondary rounded-lg overflow-hidden shadow-xl">
                 {currentSong.coverArt ? (
-                  <img
+                  <Image
                     src={currentSong.coverArt}
                     alt={currentSong.title}
                     className="h-full w-full object-cover"
+                    width={400}
+                    height={400}
+                    priority
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-indigo-600">
@@ -515,10 +545,12 @@ function QueueItem({
     >
       <Avatar className="h-10 w-10 rounded-md">
         {song.coverArt ? (
-          <img
+          <Image
             src={song.coverArt}
             alt={song.title}
             className="h-full w-full object-cover"
+            width={40}
+            height={40}
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-purple-400/30 to-indigo-600/30">
