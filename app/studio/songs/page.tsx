@@ -6,18 +6,18 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { SongId, Song } from "@/types/song";
 import { useRouter } from "next/navigation";
-import { 
-  Music, 
-  Edit, 
-  Trash2, 
-  EyeOff, 
-  Eye, 
+import {
+  Music,
+  Edit,
+  Trash2,
+  EyeOff,
+  Eye,
   Play,
   Search,
   ArrowUpDown,
   MoreHorizontal,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -25,12 +25,12 @@ import { usePlayerStore } from "@/lib/player-store";
 import { EditSongDialog } from "@/components/edit-song-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -65,13 +65,13 @@ export default function SongsPage() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   // Player state
   const { playSong } = usePlayerStore();
 
   // Edit dialog state
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  
+
   // Status message state
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
@@ -82,31 +82,35 @@ export default function SongsPage() {
   // Delete song state
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const deleteSong = useMutation(api.music.deleteSong);
-  const toggleSongPublicationStatus = useMutation(api.music.toggleSongPublicationStatus);
-  
+  const toggleSongPublicationStatus = useMutation(
+    api.music.toggleSongPublicationStatus
+  );
+
   // Fetch songs
-  const allSongs = useQuery(
-    api.music.getSongsByArtist,
-    isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
-  ) || [];
-  
+  const allSongs =
+    useQuery(
+      api.music.getSongsByArtist,
+      isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
+    ) || [];
+
   // Filter and sort songs
   const filteredSongs = allSongs
-    .filter(song => 
-      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      song.artistName.toLowerCase().includes(searchQuery.toLowerCase())
+    .filter(
+      (song) =>
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artistName.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
       let valueA = a[sortField as keyof typeof a];
       let valueB = b[sortField as keyof typeof b];
-      
+
       if (valueA === undefined) valueA = 0;
       if (valueB === undefined) valueB = 0;
-      
+
       const comparison = valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
       return sortDirection === "desc" ? -comparison : comparison;
     });
-  
+
   // Pagination
   const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
   const paginatedSongs = filteredSongs.slice(
@@ -118,7 +122,7 @@ export default function SongsPage() {
   const handleEditSong = (song: Song) => {
     setSelectedSong(song);
   };
-  
+
   // Handle song deletion
   const handleDeleteSong = async (songId: string) => {
     if (!user || !songId) return;
@@ -164,7 +168,7 @@ export default function SongsPage() {
       setDeletingSongId(null);
     }
   };
-  
+
   // Handle toggle publication status
   const handleTogglePublicationStatus = async (song: Song) => {
     if (!user || !song._id) return;
@@ -200,7 +204,7 @@ export default function SongsPage() {
       }, 3000);
     }
   };
-  
+
   // Handle sort change
   const handleSortChange = (field: string) => {
     if (field === sortField) {
@@ -210,7 +214,7 @@ export default function SongsPage() {
       setSortDirection("desc");
     }
   };
-  
+
   // Format date from timestamp
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return "N/A";
@@ -245,11 +249,11 @@ export default function SongsPage() {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">All Songs</h1>
-          <Button onClick={() => router.push('/studio/upload')}>
+          <Button onClick={() => router.push("/studio/upload")}>
             <Music className="mr-2 h-4 w-4" /> Upload New Song
           </Button>
         </div>
-        
+
         {/* Filters and search */}
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -278,10 +282,12 @@ export default function SongsPage() {
                     <SelectItem value="likes">Likes</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Button
                   variant="outline"
-                  onClick={() => setSortDirection(sortDirection === "desc" ? "asc" : "desc")}
+                  onClick={() =>
+                    setSortDirection(sortDirection === "desc" ? "asc" : "desc")
+                  }
                 >
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
@@ -289,7 +295,7 @@ export default function SongsPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Songs table */}
         <Card>
           <CardHeader>
@@ -302,11 +308,11 @@ export default function SongsPage() {
                 <Music className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No songs found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery 
+                  {searchQuery
                     ? "No songs match your search query."
                     : "You haven't uploaded any songs yet."}
                 </p>
-                <Button onClick={() => router.push('/studio/upload')}>
+                <Button onClick={() => router.push("/studio/upload")}>
                   Upload Your First Song
                 </Button>
               </div>
@@ -318,10 +324,18 @@ export default function SongsPage() {
                       <TableRow>
                         <TableHead className="w-10"></TableHead>
                         <TableHead>Title & Cover</TableHead>
-                        <TableHead className="hidden sm:table-cell">Status</TableHead>
-                        <TableHead className="hidden md:table-cell">Release Date</TableHead>
-                        <TableHead className="hidden md:table-cell text-right">Plays</TableHead>
-                        <TableHead className="hidden md:table-cell text-right">Likes</TableHead>
+                        <TableHead className="hidden sm:table-cell">
+                          Status
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          Release Date
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell text-right">
+                          Plays
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell text-right">
+                          Likes
+                        </TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -365,7 +379,11 @@ export default function SongsPage() {
                           <TableCell className="hidden sm:table-cell">
                             <Badge
                               variant={song.isPublic ? "default" : "outline"}
-                              className={song.isPublic ? "bg-green-500 hover:bg-green-600" : ""}
+                              className={
+                                song.isPublic
+                                  ? "bg-green-500 hover:bg-green-600"
+                                  : ""
+                              }
                             >
                               {song.isPublic ? "Published" : "Draft"}
                             </Badge>
@@ -388,18 +406,25 @@ export default function SongsPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => playSong(song)}>
+                                <DropdownMenuItem
+                                  onClick={() => playSong(song)}
+                                >
                                   <Play className="mr-2 h-4 w-4" /> Play
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEditSong(song)}>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditSong(song)}
+                                >
                                   <Edit className="mr-2 h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleTogglePublicationStatus(song)}
+                                  onClick={() =>
+                                    handleTogglePublicationStatus(song)
+                                  }
                                 >
                                   {song.isPublic ? (
                                     <>
-                                      <EyeOff className="mr-2 h-4 w-4" /> Unpublish
+                                      <EyeOff className="mr-2 h-4 w-4" />{" "}
+                                      Unpublish
                                     </>
                                   ) : (
                                     <>
@@ -423,14 +448,16 @@ export default function SongsPage() {
                     </TableBody>
                   </Table>
                 </div>
-                
+
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-end items-center mt-4 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -441,7 +468,9 @@ export default function SongsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />

@@ -42,6 +42,7 @@ export default defineSchema({
     releaseDate: v.number(), // timestamp
     genres: v.optional(v.array(v.string())),
     description: v.optional(v.string()),
+    isPublic: v.boolean(), // whether the album is published
   }).index("by_artistId", ["artistId"]),
 
   // Playlists

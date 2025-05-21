@@ -8,12 +8,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import {
-  Upload,
-  FileAudio,
-  CheckCircle2,
-  AlertOctagon,
-} from "lucide-react";
+import { Upload, FileAudio, CheckCircle2, AlertOctagon } from "lucide-react";
 import { FileUploader } from "@/components/file-uploader";
 
 import {
@@ -37,12 +32,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 // Define the form schema for single track uploads
@@ -79,9 +69,13 @@ type SongToAdd = {
 export default function UploadPage() {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [uploadMessage, setUploadMessage] = useState("");
-  const [uploadStep, setUploadStep] = useState<"form" | "processing" | "complete">("form");
+  const [uploadStep, setUploadStep] = useState<
+    "form" | "processing" | "complete"
+  >("form");
 
   // Single track form
   const singleTrackForm = useForm<SingleTrackFormValues>({
@@ -138,7 +132,7 @@ export default function UploadPage() {
       const genresArray = values.genres
         ? values.genres.split(",").map((genre) => genre.trim())
         : [];
-        
+
       const tagsArray = values.tags
         ? values.tags.split(",").map((tag) => tag.trim())
         : [];
@@ -160,14 +154,15 @@ export default function UploadPage() {
       setUploadStatus("success");
       setUploadMessage("Your song has been uploaded successfully!");
       setUploadStep("complete");
-      
+
       // Reset the form
       singleTrackForm.reset();
-      
     } catch (error) {
       console.error("Error uploading song:", error);
       setUploadStatus("error");
-      setUploadMessage("An error occurred while uploading your song. Please try again.");
+      setUploadMessage(
+        "An error occurred while uploading your song. Please try again."
+      );
       setUploadStep("form");
     }
   };
@@ -175,29 +170,28 @@ export default function UploadPage() {
   // Add a song to the album
   const addSongToAlbum = () => {
     setSongError("");
-    
+
     if (!currentSong.title) {
       setSongError("Please enter a song title.");
       return;
     }
-    
+
     if (!currentSong.audioUrl) {
       setSongError("Please upload an audio file.");
       return;
     }
-    
+
     setAddingSong(true);
-    
+
     try {
       const newSong = {
         title: currentSong.title,
         audioUrl: currentSong.audioUrl,
         trackNumber: songs.length + 1,
       };
-      
+
       setSongs([...songs, newSong]);
       setCurrentSong({ title: "", audioUrl: "" });
-      
     } catch (error) {
       console.error("Error adding song:", error);
       setSongError("Failed to add song. Please try again.");
@@ -209,13 +203,13 @@ export default function UploadPage() {
   // Remove a song from the album
   const removeSongFromAlbum = (index: number) => {
     const updatedSongs = songs.filter((_, i) => i !== index);
-    
+
     // Update track numbers
     const reorderedSongs = updatedSongs.map((song, i) => ({
       ...song,
       trackNumber: i + 1,
     }));
-    
+
     setSongs(reorderedSongs);
   };
 
@@ -267,16 +261,17 @@ export default function UploadPage() {
       setUploadStatus("success");
       setUploadMessage("Your album has been created successfully!");
       setUploadStep("complete");
-      
+
       // Reset forms
       albumForm.reset();
       setSongs([]);
       setCurrentSong({ title: "", audioUrl: "" });
-      
     } catch (error) {
       console.error("Error creating album:", error);
       setUploadStatus("error");
-      setUploadMessage("An error occurred while creating your album. Please try again.");
+      setUploadMessage(
+        "An error occurred while creating your album. Please try again."
+      );
       setUploadStep("form");
     }
   };
@@ -299,7 +294,7 @@ export default function UploadPage() {
             <TabsTrigger value="single">Single Track</TabsTrigger>
             <TabsTrigger value="album">Album</TabsTrigger>
           </TabsList>
-          
+
           {/* Single Track Upload */}
           <TabsContent value="single">
             <Card>
@@ -311,7 +306,10 @@ export default function UploadPage() {
               </CardHeader>
               <CardContent>
                 <Form {...singleTrackForm}>
-                  <form onSubmit={singleTrackForm.handleSubmit(onSingleTrackSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={singleTrackForm.handleSubmit(onSingleTrackSubmit)}
+                    className="space-y-6"
+                  >
                     {/* Audio File Upload */}
                     <FormField
                       control={singleTrackForm.control}
@@ -344,7 +342,10 @@ export default function UploadPage() {
                           <FormItem>
                             <FormLabel>Track Title*</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter track title" {...field} />
+                              <Input
+                                placeholder="Enter track title"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -381,7 +382,9 @@ export default function UploadPage() {
                               <FormControl>
                                 <Input
                                   type="text"
-                                  placeholder={new Date().getFullYear().toString()}
+                                  placeholder={new Date()
+                                    .getFullYear()
+                                    .toString()}
                                   {...field}
                                 />
                               </FormControl>
@@ -410,7 +413,8 @@ export default function UploadPage() {
                               />
                             </FormControl>
                             <FormDescription>
-                              Upload a square image, at least 500x500 pixels. 8MB max.
+                              Upload a square image, at least 500x500 pixels.
+                              8MB max.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -420,7 +424,9 @@ export default function UploadPage() {
 
                     {/* Additional Details */}
                     <div className="pt-4">
-                      <h3 className="text-lg font-medium mb-4">Additional Details</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        Additional Details
+                      </h3>
                       <div className="grid gap-6">
                         <FormField
                           control={singleTrackForm.control}
@@ -486,7 +492,9 @@ export default function UploadPage() {
 
                     {/* Publishing Options */}
                     <div className="pt-4">
-                      <h3 className="text-lg font-medium mb-4">Publishing Options</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        Publishing Options
+                      </h3>
                       <FormField
                         control={singleTrackForm.control}
                         name="isPublic"
@@ -497,7 +505,8 @@ export default function UploadPage() {
                                 Publish immediately
                               </FormLabel>
                               <FormDescription>
-                                When disabled, your track will be saved as a draft
+                                When disabled, your track will be saved as a
+                                draft
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -523,7 +532,7 @@ export default function UploadPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Album Upload */}
           <TabsContent value="album">
             <Card>
@@ -535,7 +544,10 @@ export default function UploadPage() {
               </CardHeader>
               <CardContent>
                 <Form {...albumForm}>
-                  <form onSubmit={albumForm.handleSubmit(onAlbumSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={albumForm.handleSubmit(onAlbumSubmit)}
+                    className="space-y-6"
+                  >
                     {/* Album Details */}
                     <div className="grid gap-6">
                       <FormField
@@ -545,7 +557,10 @@ export default function UploadPage() {
                           <FormItem>
                             <FormLabel>Album Title*</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter album title" {...field} />
+                              <Input
+                                placeholder="Enter album title"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -609,7 +624,8 @@ export default function UploadPage() {
                               />
                             </FormControl>
                             <FormDescription>
-                              Upload a square image, at least 500x500 pixels. 8MB max.
+                              Upload a square image, at least 500x500 pixels.
+                              8MB max.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -620,7 +636,7 @@ export default function UploadPage() {
                     {/* Add Tracks */}
                     <div className="pt-4">
                       <h3 className="text-lg font-medium mb-4">Album Tracks</h3>
-                      
+
                       {/* Current tracks */}
                       {songs.length > 0 && (
                         <div className="mb-6">
@@ -631,21 +647,33 @@ export default function UploadPage() {
                             <table className="w-full">
                               <thead className="bg-muted">
                                 <tr>
-                                  <th className="py-3 px-4 text-left text-xs font-medium">#</th>
-                                  <th className="py-3 px-4 text-left text-xs font-medium">Title</th>
-                                  <th className="py-3 px-4 text-right text-xs font-medium">Actions</th>
+                                  <th className="py-3 px-4 text-left text-xs font-medium">
+                                    #
+                                  </th>
+                                  <th className="py-3 px-4 text-left text-xs font-medium">
+                                    Title
+                                  </th>
+                                  <th className="py-3 px-4 text-right text-xs font-medium">
+                                    Actions
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y">
                                 {songs.map((song, index) => (
                                   <tr key={index} className="bg-card">
-                                    <td className="py-3 px-4 text-sm">{song.trackNumber}</td>
-                                    <td className="py-3 px-4 text-sm">{song.title}</td>
+                                    <td className="py-3 px-4 text-sm">
+                                      {song.trackNumber}
+                                    </td>
+                                    <td className="py-3 px-4 text-sm">
+                                      {song.title}
+                                    </td>
                                     <td className="py-3 px-4 text-right">
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => removeSongFromAlbum(index)}
+                                        onClick={() =>
+                                          removeSongFromAlbum(index)
+                                        }
                                       >
                                         Remove
                                       </Button>
@@ -657,7 +685,7 @@ export default function UploadPage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Add new track */}
                       <Card className="border border-dashed">
                         <CardHeader className="pb-2">
@@ -666,29 +694,43 @@ export default function UploadPage() {
                         <CardContent className="space-y-4">
                           <div className="grid grid-cols-1 gap-4">
                             <div>
-                              <label className="text-sm font-medium">Track Title*</label>
+                              <label className="text-sm font-medium">
+                                Track Title*
+                              </label>
                               <Input
                                 placeholder="Enter track title"
                                 value={currentSong.title}
-                                onChange={(e) => setCurrentSong({ ...currentSong, title: e.target.value })}
+                                onChange={(e) =>
+                                  setCurrentSong({
+                                    ...currentSong,
+                                    title: e.target.value,
+                                  })
+                                }
                               />
                             </div>
-                            
+
                             <div>
-                              <label className="text-sm font-medium">Audio File*</label>
+                              <label className="text-sm font-medium">
+                                Audio File*
+                              </label>
                               <FileUploader
                                 endpoint="audioUploader"
                                 value={currentSong.audioUrl}
-                                onChange={(url) => setCurrentSong({ ...currentSong, audioUrl: url || "" })}
+                                onChange={(url) =>
+                                  setCurrentSong({
+                                    ...currentSong,
+                                    audioUrl: url || "",
+                                  })
+                                }
                                 className="bg-muted"
                               />
                             </div>
                           </div>
-                          
+
                           {songError && (
                             <p className="text-sm text-red-500">{songError}</p>
                           )}
-                          
+
                           <div className="flex justify-end">
                             <Button
                               type="button"
@@ -706,7 +748,9 @@ export default function UploadPage() {
 
                     {/* Publishing Options */}
                     <div className="pt-4">
-                      <h3 className="text-lg font-medium mb-4">Publishing Options</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        Publishing Options
+                      </h3>
                       <FormField
                         control={albumForm.control}
                         name="isPublic"
@@ -717,7 +761,8 @@ export default function UploadPage() {
                                 Publish immediately
                               </FormLabel>
                               <FormDescription>
-                                When disabled, your album will be saved as a draft
+                                When disabled, your album will be saved as a
+                                draft
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -757,9 +802,12 @@ export default function UploadPage() {
               {uploadStatus === "error" && "Upload Failed"}
             </CardTitle>
             <CardDescription>
-              {uploadStatus === "loading" && "Please wait while we process your upload."}
-              {uploadStatus === "success" && "Your music has been successfully uploaded."}
-              {uploadStatus === "error" && "There was a problem with your upload."}
+              {uploadStatus === "loading" &&
+                "Please wait while we process your upload."}
+              {uploadStatus === "success" &&
+                "Your music has been successfully uploaded."}
+              {uploadStatus === "error" &&
+                "There was a problem with your upload."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -769,10 +817,12 @@ export default function UploadPage() {
                   <div className="absolute inset-0 rounded-full border-4 border-muted-foreground/20 border-t-4 border-t-primary animate-spin"></div>
                 </div>
                 <p className="text-lg font-medium">Processing your upload...</p>
-                <p className="text-muted-foreground mt-2">This may take a moment.</p>
+                <p className="text-muted-foreground mt-2">
+                  This may take a moment.
+                </p>
               </div>
             )}
-            
+
             {uploadStatus === "success" && (
               <div className="flex flex-col items-center text-center">
                 <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
@@ -782,7 +832,7 @@ export default function UploadPage() {
                 </p>
               </div>
             )}
-            
+
             {uploadStatus === "error" && (
               <div className="flex flex-col items-center text-center">
                 <AlertOctagon className="h-16 w-16 text-red-500 mb-4" />
@@ -796,7 +846,7 @@ export default function UploadPage() {
           <CardFooter className="flex justify-center">
             {uploadStatus === "success" && (
               <div className="flex gap-4">
-                <Button onClick={() => router.push('/studio/songs')}>
+                <Button onClick={() => router.push("/studio/songs")}>
                   View My Songs
                 </Button>
                 <Button variant="outline" onClick={() => setUploadStep("form")}>
@@ -804,11 +854,9 @@ export default function UploadPage() {
                 </Button>
               </div>
             )}
-            
+
             {uploadStatus === "error" && (
-              <Button onClick={() => setUploadStep("form")}>
-                Try Again
-              </Button>
+              <Button onClick={() => setUploadStep("form")}>Try Again</Button>
             )}
           </CardFooter>
         </Card>

@@ -6,7 +6,15 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Sidebar } from "@/components/ui/sidebar";
-import { Home, BarChart2, Music, Upload, Edit, Settings, FileAudio } from "lucide-react";
+import {
+  Home,
+  BarChart2,
+  Music,
+  Upload,
+  Edit,
+  Settings,
+  FileAudio,
+} from "lucide-react";
 
 export default function StudioLayout({
   children,

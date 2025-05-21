@@ -350,7 +350,7 @@ export const createAlbum = mutation({
       genres: args.genres,
       description: args.description,
       releaseDate: Date.now(),
-      isPublic: args.isPublic ?? true,
+      isPublic: args.isPublic ?? false, // Default to private/draft if not specified
     });
 
     return albumId;
@@ -380,7 +380,7 @@ export const deleteAlbum = mutation({
       .query("songs")
       .withIndex("by_albumId", (q) => q.eq("albumId", args.id))
       .collect();
-    
+
     for (const song of albumSongs) {
       await ctx.db.delete(song._id);
     }

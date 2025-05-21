@@ -1,42 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useUser }  // Define album and song types
-  type Album = {
-    _id: string;
-    title: string;
-    artistId: string;
-    artistName: string;
-    coverArt?: string;
-    genres?: string[];
-    description?: string;
-    releaseDate?: number;
-    isPublic?: boolean;
-    _creationTime?: number;
-  };
-  
-  type Song = {
-    _id: string;
-    title: string;
-    audioUrl: string;
-    artistId: string;
-    artistName: string;
-    albumId?: string;
-    coverArt?: string;
-    genres?: string[];
-    plays?: number;
-    likes?: number;
-    isPublic?: boolean;
-    _creationTime?: number;
-  };
-
-  // Group songs by album
-  const albumSongs = albums.reduce((acc: Record<string, Song[]>, album: Album) => {
-    acc[album._id] = songsByAlbum.filter((song: Song) => song.albumId === album._id);
-    return acc;
-  }, {}); "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useRouter } from "next/navigation";
 import { 
   Music, 

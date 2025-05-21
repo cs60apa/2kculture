@@ -5,26 +5,18 @@ import { useUser, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { 
-  User, 
-  Lock, 
-  Bell, 
-  Globe, 
-  Trash2,
-  Save,
-  Badge,
-} from "lucide-react";
+import { User, Lock, Bell, Globe, Trash2, Save, Badge } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle, 
-  CardFooter 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,12 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -60,7 +47,11 @@ const profileSchema = z.object({
   displayName: z.string().min(2, "Display name must be at least 2 characters"),
   bio: z.string().optional(),
   profileImage: z.string().optional(),
-  website: z.string().url("Please enter a valid URL").optional().or(z.string().length(0)),
+  website: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.string().length(0)),
   location: z.string().optional(),
 });
 
@@ -90,7 +81,7 @@ export default function SettingsPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  
+
   // Status message state
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
@@ -99,21 +90,25 @@ export default function SettingsPage() {
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
 
-  
   // Update user profile mutation
   const updateProfile = useMutation(api.music.updateUser);
+
+  // Fetch user profile
+  const userProfile = useQuery(
+    api.music.getUser,
+    isLoaded && isSignedIn ? { userId: user?.id } : "skip"
+  );
 
   // Profile form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.fullName || "",
-      bio: "",
-      profileImage: user?.imageUrl || "",
-      website: "",
-      location: "",
+      displayName: userProfile?.name || user?.fullName || "",
+      bio: userProfile?.bio || "",
+      profileImage: userProfile?.imageUrl || user?.imageUrl || "",
+      website: userProfile?.website || "",
+      location: userProfile?.location || "",
     },
   });
 
@@ -143,33 +138,38 @@ export default function SettingsPage() {
   // Handle profile update
   const onProfileSubmit = async (values: ProfileFormValues) => {
     if (!isSignedIn || !user) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       await updateProfile({
         userId: user.id,
         name: values.displayName,
         imageUrl: values.profileImage || undefined,
+        bio: values.bio || undefined,
+        website: values.website || undefined,
+        location: values.location || undefined,
+        name: values.displayName,
+        imageUrl: values.profileImage || undefined,
         // Other fields would be saved in a real implementation
       });
-      
+
       setStatusMessage({
         type: "success",
         message: "Profile updated successfully",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      
+
       setStatusMessage({
         type: "error",
         message: "Failed to update profile",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
@@ -181,29 +181,29 @@ export default function SettingsPage() {
   // Handle notification settings update
   const onNotificationSubmit = async (values: NotificationFormValues) => {
     if (!isSignedIn || !user) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // In a real implementation, you would save these settings to your database
       console.log("Notification settings:", values);
-      
+
       setStatusMessage({
         type: "success",
         message: "Notification settings updated successfully",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
     } catch (error) {
       console.error("Failed to update notification settings:", error);
-      
+
       setStatusMessage({
         type: "error",
         message: "Failed to update notification settings",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
@@ -215,29 +215,29 @@ export default function SettingsPage() {
   // Handle preferences update
   const onPreferencesSubmit = async (values: PreferencesFormValues) => {
     if (!isSignedIn || !user) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // In a real implementation, you would save these settings to your database
       console.log("Preferences:", values);
-      
+
       setStatusMessage({
         type: "success",
         message: "Preferences updated successfully",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
     } catch (error) {
       console.error("Failed to update preferences:", error);
-      
+
       setStatusMessage({
         type: "error",
         message: "Failed to update preferences",
       });
-      
+
       setTimeout(() => {
         setStatusMessage(null);
       }, 3000);
@@ -245,7 +245,7 @@ export default function SettingsPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   // Handle account deletion
   const handleDeleteAccount = () => {
     // In a real implementation, you would show a confirmation dialog and delete the user's account
@@ -254,7 +254,9 @@ export default function SettingsPage() {
         "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted."
       )
     ) {
-      alert("Account deletion is not implemented in this demo. In a real application, this would delete your account.");
+      alert(
+        "Account deletion is not implemented in this demo. In a real application, this would delete your account."
+      );
     }
   };
 
@@ -283,8 +285,13 @@ export default function SettingsPage() {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Settings</h1>
         </div>
-        
-        <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="w-full">
+
+        <Tabs
+          defaultValue="profile"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-4 w-full sm:w-[600px]">
             <TabsTrigger value="profile">
               <User className="h-4 w-4 mr-2" />
@@ -303,7 +310,7 @@ export default function SettingsPage() {
               <span className="hidden sm:inline">Preferences</span>
             </TabsTrigger>
           </TabsList>
-          
+
           {/* Profile Tab */}
           <TabsContent value="profile">
             <Card>
@@ -315,7 +322,10 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <Form {...profileForm}>
-                  <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                    className="space-y-6"
+                  >
                     <FormField
                       control={profileForm.control}
                       name="profileImage"
@@ -354,7 +364,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={profileForm.control}
                       name="displayName"
@@ -365,13 +375,14 @@ export default function SettingsPage() {
                             <Input placeholder="Your display name" {...field} />
                           </FormControl>
                           <FormDescription>
-                            This is the name that will be displayed to other users.
+                            This is the name that will be displayed to other
+                            users.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={profileForm.control}
                       name="bio"
@@ -386,13 +397,14 @@ export default function SettingsPage() {
                             />
                           </FormControl>
                           <FormDescription>
-                            A brief description that will appear on your profile.
+                            A brief description that will appear on your
+                            profile.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={profileForm.control}
@@ -401,7 +413,10 @@ export default function SettingsPage() {
                           <FormItem>
                             <FormLabel>Website</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://yourwebsite.com" {...field} />
+                              <Input
+                                placeholder="https://yourwebsite.com"
+                                {...field}
+                              />
                             </FormControl>
                             <FormDescription>
                               Your personal or artist website.
@@ -410,7 +425,7 @@ export default function SettingsPage() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={profileForm.control}
                         name="location"
@@ -428,7 +443,7 @@ export default function SettingsPage() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="flex justify-end">
                       <Button
                         type="submit"
@@ -449,7 +464,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Account Tab */}
           <TabsContent value="account">
             <Card>
@@ -462,92 +477,133 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium mb-2">Email</h3>
-                  <p className="text-muted-foreground mb-2">Your email address is used for login and notifications</p>
+                  <p className="text-muted-foreground mb-2">
+                    Your email address is used for login and notifications
+                  </p>
                   <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                    <span className="font-medium">{user?.primaryEmailAddress?.emailAddress}</span>
+                    <span className="font-medium">
+                      {user?.primaryEmailAddress?.emailAddress}
+                    </span>
                     <Badge className="ml-2 bg-green-500">Verified</Badge>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div>
                   <h3 className="text-lg font-medium mb-2">Password</h3>
                   <p className="text-muted-foreground mb-4">
                     Change your password or reset it if you&apos;ve forgotten it
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" onClick={() => router.push('/user/settings/password')}>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/user/settings/password")}
+                    >
                       Change Password
                     </Button>
-                    <Button variant="ghost" onClick={() => router.push('/reset-password')}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => router.push("/reset-password")}
+                    >
                       Forgot Password?
                     </Button>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Connected Accounts</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Connected Accounts
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Link your social media accounts to enable sharing and cross-posting
+                    Link your social media accounts to enable sharing and
+                    cross-posting
                   </p>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-muted rounded-md">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">f</div>
+                        <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                          f
+                        </div>
                         <span>Facebook</span>
                       </div>
-                      <Button variant="ghost" size="sm">Connect</Button>
+                      <Button variant="ghost" size="sm">
+                        Connect
+                      </Button>
                     </div>
-                    
+
                     <div className="flex justify-between items-center p-3 bg-muted rounded-md">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white">X</div>
+                        <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white">
+                          X
+                        </div>
                         <span>Twitter</span>
                       </div>
-                      <Button variant="ghost" size="sm">Connect</Button>
+                      <Button variant="ghost" size="sm">
+                        Connect
+                      </Button>
                     </div>
-                    
+
                     <div className="flex justify-between items-center p-3 bg-muted rounded-md">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-orange-600 flex items-center justify-center text-white">IG</div>
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-orange-600 flex items-center justify-center text-white">
+                          IG
+                        </div>
                         <span>Instagram</span>
                       </div>
-                      <Button variant="ghost" size="sm">Connect</Button>
+                      <Button variant="ghost" size="sm">
+                        Connect
+                      </Button>
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div>
-                  <h3 className="text-lg font-medium text-red-600 mb-2">Danger Zone</h3>
+                  <h3 className="text-lg font-medium text-red-600 mb-2">
+                    Danger Zone
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     These actions are permanent and cannot be undone
                   </p>
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 border border-red-200 bg-red-50 dark:bg-red-900/10 rounded-md">
                       <div>
-                        <h4 className="font-medium text-red-600">Sign Out Everywhere</h4>
+                        <h4 className="font-medium text-red-600">
+                          Sign Out Everywhere
+                        </h4>
                         <p className="text-sm text-muted-foreground">
-                          Sign out from all devices where you&apos;re currently logged in
+                          Sign out from all devices where you&apos;re currently
+                          logged in
                         </p>
                       </div>
-                      <Button variant="outline" className="text-red-600 border-red-600" onClick={() => alert("This would sign you out from all devices")}>
+                      <Button
+                        variant="outline"
+                        className="text-red-600 border-red-600"
+                        onClick={() =>
+                          alert("This would sign you out from all devices")
+                        }
+                      >
                         Sign Out Everywhere
                       </Button>
                     </div>
-                    
+
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 border border-red-200 bg-red-50 dark:bg-red-900/10 rounded-md">
                       <div>
-                        <h4 className="font-medium text-red-600">Delete Account</h4>
+                        <h4 className="font-medium text-red-600">
+                          Delete Account
+                        </h4>
                         <p className="text-sm text-muted-foreground">
                           Permanently delete your account and all your data
                         </p>
                       </div>
-                      <Button variant="destructive" onClick={handleDeleteAccount}>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteAccount}
+                      >
                         <Trash2 className="h-4 w-4 mr-2" /> Delete Account
                       </Button>
                     </div>
@@ -555,11 +611,13 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" onClick={() => signOut()}>Sign Out</Button>
+                <Button variant="outline" onClick={() => signOut()}>
+                  Sign Out
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
-          
+
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <Card>
@@ -571,7 +629,12 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <Form {...notificationForm}>
-                  <form onSubmit={notificationForm.handleSubmit(onNotificationSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={notificationForm.handleSubmit(
+                      onNotificationSubmit
+                    )}
+                    className="space-y-6"
+                  >
                     <FormField
                       control={notificationForm.control}
                       name="emailNotifications"
@@ -594,7 +657,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={notificationForm.control}
                       name="newFollowers"
@@ -617,7 +680,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={notificationForm.control}
                       name="songComments"
@@ -640,7 +703,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={notificationForm.control}
                       name="songLikes"
@@ -663,7 +726,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={notificationForm.control}
                       name="newReleases"
@@ -674,7 +737,8 @@ export default function SettingsPage() {
                               New Releases
                             </FormLabel>
                             <FormDescription>
-                              Get notified about new music from artists you follow
+                              Get notified about new music from artists you
+                              follow
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -686,7 +750,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="flex justify-end">
                       <Button
                         type="submit"
@@ -707,7 +771,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Preferences Tab */}
           <TabsContent value="preferences">
             <Card>
@@ -719,7 +783,10 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <Form {...preferencesForm}>
-                  <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)}
+                    className="space-y-6"
+                  >
                     <FormField
                       control={preferencesForm.control}
                       name="defaultVisibility"
@@ -741,13 +808,14 @@ export default function SettingsPage() {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Choose whether new uploads are public or private by default
+                            Choose whether new uploads are public or private by
+                            default
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={preferencesForm.control}
                       name="language"
@@ -778,7 +846,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={preferencesForm.control}
                       name="allowComments"
@@ -801,7 +869,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={preferencesForm.control}
                       name="autoplayRelated"
@@ -812,7 +880,8 @@ export default function SettingsPage() {
                               Autoplay Related
                             </FormLabel>
                             <FormDescription>
-                              Automatically play related songs when the current one ends
+                              Automatically play related songs when the current
+                              one ends
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -824,7 +893,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="flex justify-end">
                       <Button
                         type="submit"

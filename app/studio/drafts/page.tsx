@@ -6,27 +6,27 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { SongId, Song } from "@/types/song";
 import { useRouter } from "next/navigation";
-import { 
-  Music, 
-  Edit, 
+import {
+  Music,
+  Edit,
   Trash2,
-  Eye, 
+  Eye,
   Play,
   FileAudio,
   MoreHorizontal,
-  Plus
+  Plus,
 } from "lucide-react";
 import Image from "next/image";
 
 import { usePlayerStore } from "@/lib/player-store";
 import { EditSongDialog } from "@/components/edit-song-dialog";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,7 +45,7 @@ export default function DraftsPage() {
 
   // Edit dialog state
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  
+
   // Status message state
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
@@ -56,22 +56,25 @@ export default function DraftsPage() {
   // Delete song state
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const deleteSong = useMutation(api.music.deleteSong);
-  const toggleSongPublicationStatus = useMutation(api.music.toggleSongPublicationStatus);
-  
+  const toggleSongPublicationStatus = useMutation(
+    api.music.toggleSongPublicationStatus
+  );
+
   // Fetch songs by the current artist
-  const allSongs = useQuery(
-    api.music.getSongsByArtist,
-    isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
-  ) || [];
-  
+  const allSongs =
+    useQuery(
+      api.music.getSongsByArtist,
+      isLoaded && isSignedIn ? { artistId: user?.id } : "skip"
+    ) || [];
+
   // Filter for draft songs only
-  const draftSongs = allSongs.filter(song => !song.isPublic);
+  const draftSongs = allSongs.filter((song) => !song.isPublic);
 
   // Handle edit song
   const handleEditSong = (song: Song) => {
     setSelectedSong(song);
   };
-  
+
   // Handle song deletion
   const handleDeleteSong = async (songId: string) => {
     if (!user || !songId) return;
@@ -117,7 +120,7 @@ export default function DraftsPage() {
       setDeletingSongId(null);
     }
   };
-  
+
   // Handle publish song
   const handlePublishSong = async (song: Song) => {
     if (!user || !song._id) return;
@@ -151,7 +154,7 @@ export default function DraftsPage() {
       }, 3000);
     }
   };
-  
+
   // Format date from timestamp
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return "N/A";
@@ -186,11 +189,11 @@ export default function DraftsPage() {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Draft Songs</h1>
-          <Button onClick={() => router.push('/studio/upload')}>
+          <Button onClick={() => router.push("/studio/upload")}>
             <Plus className="mr-2 h-4 w-4" /> New Upload
           </Button>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Draft Songs ({draftSongs.length})</CardTitle>
@@ -204,9 +207,10 @@ export default function DraftsPage() {
                 <FileAudio className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No draft songs</h3>
                 <p className="text-muted-foreground mb-4">
-                  All your songs are published or you haven&apos;t created any drafts yet.
+                  All your songs are published or you haven&apos;t created any
+                  drafts yet.
                 </p>
-                <Button onClick={() => router.push('/studio/upload')}>
+                <Button onClick={() => router.push("/studio/upload")}>
                   Create New Draft
                 </Button>
               </div>
@@ -240,7 +244,9 @@ export default function DraftsPage() {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">{song.title}</CardTitle>
+                          <CardTitle className="text-lg">
+                            {song.title}
+                          </CardTitle>
                           <CardDescription>{song.artistName}</CardDescription>
                         </div>
                         <Badge variant="outline" className="mb-2">
@@ -253,8 +259,8 @@ export default function DraftsPage() {
                         Created: {formatDate(song._creationTime)}
                       </div>
                       <div className="flex justify-between gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           onClick={() => handlePublishSong(song)}
                           className="flex-grow"
                         >
@@ -268,7 +274,9 @@ export default function DraftsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditSong(song)}>
+                            <DropdownMenuItem
+                              onClick={() => handleEditSong(song)}
+                            >
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
