@@ -26,10 +26,10 @@ export default defineSchema({
     duration: v.optional(v.number()),
     genres: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
-    plays: v.number(), // play count
-    likes: v.number(), // like count
-    shares: v.number(), // share count
-    comments: v.number(), // comment count
+    plays: v.float64(), // play count
+    likes: v.float64(), // like count
+    shares: v.float64(), // share count
+    comments: v.float64(), // comment count
     releaseDate: v.number(), // timestamp
     isPublic: v.boolean(), // whether the song is published
   })
