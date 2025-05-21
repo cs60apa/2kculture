@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { User, Lock, Bell, Globe, Trash2, Save, Badge } from "lucide-react";
@@ -148,10 +149,7 @@ export default function SettingsPage() {
         imageUrl: values.profileImage || undefined,
         bio: values.bio || undefined,
         website: values.website || undefined,
-        location: values.location || undefined,
-        name: values.displayName,
-        imageUrl: values.profileImage || undefined,
-        // Other fields would be saved in a real implementation
+        location: values.location || undefined, // Other fields would be saved in a real implementation
       });
 
       setStatusMessage({
@@ -336,10 +334,12 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-4">
                               <div className="h-20 w-20 rounded-full overflow-hidden bg-muted relative">
                                 {field.value ? (
-                                  <img
+                                  <Image
                                     src={field.value}
                                     alt="Profile preview"
                                     className="h-full w-full object-cover"
+                                    width={80}
+                                    height={80}
                                   />
                                 ) : (
                                   <div className="flex items-center justify-center h-full w-full bg-muted">

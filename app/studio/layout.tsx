@@ -76,27 +76,29 @@ export default function StudioLayout({
 
   return (
     <SidebarProvider>
-      <Navbar />
-      <div className="flex">
-        <div className="hidden md:flex h-[calc(100vh-64px)] w-64 flex-col fixed inset-y-16 z-50">
-          <Sidebar>
-            <SidebarMenu>
-              {sidebarItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.href} className="flex items-center gap-2">
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </Sidebar>
-        </div>
-        <div className="pt-16 md:pl-64 w-full">
-          <main className="container mx-auto px-4 py-8">{children}</main>
-          <Footer />
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex flex-1">
+          <aside className="hidden md:block w-64 border-r">
+            <Sidebar className="px-4 py-6">
+              <SidebarMenu className="space-y-1">
+                {sidebarItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.href} className="flex items-center gap-2">
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </Sidebar>
+          </aside>
+          <main className="flex-1">
+            <div className="container mx-auto px-4 py-8">{children}</div>
+            <Footer />
+          </main>
         </div>
       </div>
     </SidebarProvider>
