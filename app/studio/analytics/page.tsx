@@ -8,7 +8,6 @@ import { Song } from "@/types/song";
 import { useRouter } from "next/navigation";
 import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { Song } from "@/types/song"; // Add Song type import
 
 import {
   Card,
@@ -278,7 +277,9 @@ export default function AnalyticsPage() {
         </div>
         <Select
           value={timeFrame}
-          onValueChange={(value) => setTimeFrame(value as any)}
+          onValueChange={(value: "7days" | "30days" | "90days" | "year") =>
+            setTimeFrame(value)
+          }
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Time Period" />
@@ -437,8 +438,10 @@ export default function AnalyticsPage() {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                          callback: function (value: number) {
-                            return value + "%";
+                          callback: function (tickValue: string | number) {
+                            return typeof tickValue === "number"
+                              ? tickValue + "%"
+                              : tickValue;
                           },
                         },
                       },

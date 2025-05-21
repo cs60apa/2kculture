@@ -5,7 +5,13 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Sidebar } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarProvider,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 import {
   Home,
   BarChart2,
@@ -69,17 +75,30 @@ export default function StudioLayout({
   ];
 
   return (
-    <>
+    <SidebarProvider>
       <Navbar />
       <div className="flex">
         <div className="hidden md:flex h-[calc(100vh-64px)] w-64 flex-col fixed inset-y-16 z-50">
-          <Sidebar items={sidebarItems} />
+          <Sidebar>
+            <SidebarMenu>
+              {sidebarItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.href} className="flex items-center gap-2">
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </Sidebar>
         </div>
         <div className="pt-16 md:pl-64 w-full">
           <main className="container mx-auto px-4 py-8">{children}</main>
           <Footer />
         </div>
       </div>
-    </>
+    </SidebarProvider>
   );
 }
