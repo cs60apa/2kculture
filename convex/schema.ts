@@ -10,6 +10,9 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     role: v.string(), // 'artist' or 'listener'
     createdAt: v.number(), // timestamp
+    bio: v.optional(v.string()),
+    website: v.optional(v.string()),
+    location: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   // Songs table

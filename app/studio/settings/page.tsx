@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { User, Lock, Bell, Globe, Trash2, Save, Badge } from "lucide-react";
 import { useForm } from "react-hook-form";
