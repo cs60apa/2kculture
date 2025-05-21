@@ -11,6 +11,7 @@ export interface Song extends PlayerSong {
   genres?: string[];
   tags?: string[];
   plays?: number;
+  likes?: number;
   isPublic: boolean; // Should always be a boolean, but force it with Boolean() when needed
   releaseDate?: number;
   _creationTime?: number;

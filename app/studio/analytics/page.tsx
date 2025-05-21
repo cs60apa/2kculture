@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Song } from "@/types/song";
 import { useRouter } from "next/navigation";
 import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { Song } from "@/types/song"; // Add Song type import
 
 import {
   Card,
@@ -435,7 +437,7 @@ export default function AnalyticsPage() {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                          callback: function (value: any) {
+                          callback: function (value: number) {
                             return value + "%";
                           },
                         },
@@ -533,7 +535,7 @@ export default function AnalyticsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {popularSongs.slice(0, 5).map((song: any, i: number) => {
+                  {popularSongs.slice(0, 5).map((song: Song, i: number) => {
                     // Calculate engagement rate for each song
                     const songEngagement = song.plays
                       ? Math.round(((song.likes || 0) / song.plays) * 100)
