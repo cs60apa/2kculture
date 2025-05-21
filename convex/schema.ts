@@ -23,14 +23,14 @@ export default defineSchema({
     albumId: v.optional(v.id("albums")),
     audioUrl: v.string(), // UploadThing URL
     coverArt: v.optional(v.string()), // UploadThing URL
-    duration: v.optional(v.number()),
+    duration: v.optional(v.float64()),
     genres: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
     plays: v.float64(), // play count
     likes: v.float64(), // like count
-    shares: v.float64(), // share count
-    comments: v.float64(), // comment count
-    releaseDate: v.number(), // timestamp
+    shares: v.optional(v.float64()), // share count
+    comments: v.optional(v.float64()), // comment count
+    releaseDate: v.float64(), // timestamp
     isPublic: v.boolean(), // whether the song is published
   })
     .index("by_artistId", ["artistId"])
