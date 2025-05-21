@@ -37,15 +37,17 @@ import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 
 interface EditSongDialogProps {
-  song: Song;
+  song: Song | null;
   onClose: () => void;
   onSuccess?: () => void;
+  isOpen?: boolean;
 }
 
 export function EditSongDialog({
   song,
   onClose,
   onSuccess,
+  isOpen,
 }: EditSongDialogProps) {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState("details");
@@ -105,8 +107,12 @@ export function EditSongDialog({
     }
   };
 
+  if (!song) {
+    return null;
+  }
+
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={isOpen !== undefined ? isOpen : true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Edit Song</DialogTitle>

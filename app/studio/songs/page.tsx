@@ -484,22 +484,24 @@ export default function SongsPage() {
       </div>
 
       {/* Edit song dialog */}
-      <EditSongDialog
-        song={selectedSong!}
-        onClose={() => {
-          setSelectedSong(null);
-        }}
-        onSuccess={() => {
-          setSelectedSong(null);
-          setStatusMessage({
-            type: "success",
-            message: "Song updated successfully",
-          });
-          setTimeout(() => {
-            setStatusMessage(null);
-          }, 3000);
-        }}
-      />
+      {selectedSong && (
+        <EditSongDialog
+          song={selectedSong}
+          onClose={() => {
+            setSelectedSong(null);
+          }}
+          onSuccess={() => {
+            setSelectedSong(null);
+            setStatusMessage({
+              type: "success",
+              message: "Song updated successfully",
+            });
+            setTimeout(() => {
+              setStatusMessage(null);
+            }, 3000);
+          }}
+        />
+      )}
     </>
   );
 }
