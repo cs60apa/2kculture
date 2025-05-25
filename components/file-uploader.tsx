@@ -13,11 +13,13 @@ import { Progress } from "@/components/ui/progress";
 import { AlertCircle, Music, Upload } from "lucide-react";
 
 interface FileUploaderProps {
-  onChange: (url?: string) => void;
+  onChange?: (url?: string) => void;
+  onUploadComplete?: (url: string) => void;
   endpoint: "audioUploader" | "imageUploader";
   value?: string;
   className?: string;
   fileType?: "audio" | "image";
+  children?: React.ReactNode;
 }
 
 export function FileUploader({
@@ -34,7 +36,11 @@ export function FileUploader({
 
   const { startUpload } = useUploadThing(endpoint, {
     onClientUploadComplete: (res: Array<{ url: string }> | undefined) => {
-      onChange(res?.[0]?.url);
+      const uploadedUrl = res?.[0]?.url;
+      if (uploadedUrl) {
+        onChange?.(uploadedUrl);
+        onUploadComplete?.(uploadedUrl);
+      }
       setIsUploading(false);
       setUploadError(null);
       router.refresh();
@@ -94,7 +100,7 @@ export function FileUploader({
 
   return (
     <div className={cn("w-full", className)}>
-      {value ? (
+      {children || (value ? (
         <div className="flex flex-col items-center justify-center space-y-2">
           {fileType === "audio" ? (
             <audio src={value} controls className="w-full mt-2" />
@@ -109,7 +115,7 @@ export function FileUploader({
               />
             </div>
           )}
-          <Button variant="outline" onClick={() => onChange("")} size="sm">
+          <Button variant="outline" onClick={() => onChange?.("")} size="sm">
             Change {fileType}
           </Button>
         </div>

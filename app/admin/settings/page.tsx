@@ -5,15 +5,15 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import { 
+import {
   Form,
   FormControl,
   FormDescription,
@@ -26,18 +26,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Separator 
-} from "@/components/ui/separator";
-import { 
+import { Separator } from "@/components/ui/separator";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -61,7 +59,7 @@ import {
   Undo,
   Save,
   Play,
-  Upload
+  Upload,
 } from "lucide-react";
 
 // Define form schema for platform settings
@@ -70,28 +68,30 @@ const platformSettingsSchema = z.object({
   description: z.string().optional(),
   contactEmail: z.string().email("Invalid email address"),
   maxUploadSize: z.number().min(1, "Upload size must be at least 1MB"),
-  enableUploads: z.boolean().default(true),
-  enableComments: z.boolean().default(true),
-  enableAnalytics: z.boolean().default(true),
+  enableUploads: z.boolean(),
+  enableComments: z.boolean(),
+  enableAnalytics: z.boolean(),
   defaultPrivacy: z.enum(["public", "private"]),
   uploadFormats: z.array(z.string()),
-  maintenanceMode: z.boolean().default(false),
+  maintenanceMode: z.boolean(),
 });
 
 // Define form schema for user settings
 const userSettingsSchema = z.object({
   defaultUserRole: z.enum(["artist", "listener", "admin"]),
-  allowAccountDeletion: z.boolean().default(true),
-  requireEmailVerification: z.boolean().default(true),
-  autoApproveArtists: z.boolean().default(false),
+  allowAccountDeletion: z.boolean(),
+  requireEmailVerification: z.boolean(),
+  autoApproveArtists: z.boolean(),
 });
 
 // Settings page for admin
 export default function SettingsPage() {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState("platform");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
-  
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "success" | "error"
+  >("idle");
+
   // Initialize form with default values
   const platformForm = useForm<z.infer<typeof platformSettingsSchema>>({
     resolver: zodResolver(platformSettingsSchema),
@@ -108,7 +108,7 @@ export default function SettingsPage() {
       maintenanceMode: false,
     },
   });
-  
+
   const userForm = useForm<z.infer<typeof userSettingsSchema>>({
     resolver: zodResolver(userSettingsSchema),
     defaultValues: {
@@ -118,38 +118,40 @@ export default function SettingsPage() {
       autoApproveArtists: false,
     },
   });
-  
+
   // Handle form submissions
   const onPlatformSubmit = (values: z.infer<typeof platformSettingsSchema>) => {
     setSaveStatus("saving");
-    
+
     // Simulate API call
     setTimeout(() => {
       console.log("Platform settings:", values);
       setSaveStatus("success");
-      
+
       // Reset status after delay
       setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
     }, 1000);
   };
-  
-  const onUserSubmit = (values: z.infer<typeof userSettingsSchema>) => {
+
+  type UserSettingsValues = z.infer<typeof userSettingsSchema>;
+
+  const onUserSubmit = (values: UserSettingsValues) => {
     setSaveStatus("saving");
-    
+
     // Simulate API call
     setTimeout(() => {
       console.log("User settings:", values);
       setSaveStatus("success");
-      
+
       // Reset status after delay
       setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
     }, 1000);
   };
-  
+
   const resetForm = () => {
     if (activeTab === "platform") {
       platformForm.reset();
@@ -157,7 +159,7 @@ export default function SettingsPage() {
       userForm.reset();
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div>
@@ -166,13 +168,13 @@ export default function SettingsPage() {
           Configure your platform and user settings
         </p>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="platform">Platform Settings</TabsTrigger>
           <TabsTrigger value="users">User Settings</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="platform" className="mt-6">
           <Card>
             <CardHeader>
@@ -183,10 +185,13 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <Form {...platformForm}>
-                <form onSubmit={platformForm.handleSubmit(onPlatformSubmit)} className="space-y-6">
+                <form
+                  onSubmit={platformForm.handleSubmit(onPlatformSubmit as any)}
+                  className="space-y-6"
+                >
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">General Settings</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="siteName">Site Name</Label>
@@ -195,10 +200,12 @@ export default function SettingsPage() {
                           {...platformForm.register("siteName")}
                         />
                         {platformForm.formState.errors.siteName && (
-                          <p className="text-sm text-destructive">{platformForm.formState.errors.siteName.message}</p>
+                          <p className="text-sm text-destructive">
+                            {platformForm.formState.errors.siteName.message}
+                          </p>
                         )}
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="contactEmail">Contact Email</Label>
                         <Input
@@ -207,11 +214,13 @@ export default function SettingsPage() {
                           {...platformForm.register("contactEmail")}
                         />
                         {platformForm.formState.errors.contactEmail && (
-                          <p className="text-sm text-destructive">{platformForm.formState.errors.contactEmail.message}</p>
+                          <p className="text-sm text-destructive">
+                            {platformForm.formState.errors.contactEmail.message}
+                          </p>
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="description">Site Description</Label>
                       <Textarea
@@ -220,12 +229,12 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Upload Settings</h3>
-                    
+
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
@@ -236,29 +245,44 @@ export default function SettingsPage() {
                         </div>
                         <Switch
                           checked={platformForm.watch("enableUploads")}
-                          onCheckedChange={(checked) => platformForm.setValue("enableUploads", checked)}
+                          onCheckedChange={(checked) =>
+                            platformForm.setValue("enableUploads", checked)
+                          }
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="maxUploadSize">Max Upload Size (MB)</Label>
+                          <Label htmlFor="maxUploadSize">
+                            Max Upload Size (MB)
+                          </Label>
                           <Input
                             id="maxUploadSize"
                             type="number"
                             min="1"
-                            {...platformForm.register("maxUploadSize", { valueAsNumber: true })}
+                            {...platformForm.register("maxUploadSize", {
+                              valueAsNumber: true,
+                            })}
                           />
                           {platformForm.formState.errors.maxUploadSize && (
-                            <p className="text-sm text-destructive">{platformForm.formState.errors.maxUploadSize.message}</p>
+                            <p className="text-sm text-destructive">
+                              {
+                                platformForm.formState.errors.maxUploadSize
+                                  .message
+                              }
+                            </p>
                           )}
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <Label htmlFor="defaultPrivacy">Default Privacy</Label>
+                          <Label htmlFor="defaultPrivacy">
+                            Default Privacy
+                          </Label>
                           <Select
                             value={platformForm.watch("defaultPrivacy")}
-                            onValueChange={(value: "public" | "private") => platformForm.setValue("defaultPrivacy", value)}
+                            onValueChange={(value: "public" | "private") =>
+                              platformForm.setValue("defaultPrivacy", value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select default privacy" />
@@ -272,12 +296,12 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Feature Toggles</h3>
-                    
+
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
@@ -288,10 +312,12 @@ export default function SettingsPage() {
                         </div>
                         <Switch
                           checked={platformForm.watch("enableComments")}
-                          onCheckedChange={(checked) => platformForm.setValue("enableComments", checked)}
+                          onCheckedChange={(checked) =>
+                            platformForm.setValue("enableComments", checked)
+                          }
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Enable Analytics</Label>
@@ -301,10 +327,12 @@ export default function SettingsPage() {
                         </div>
                         <Switch
                           checked={platformForm.watch("enableAnalytics")}
-                          onCheckedChange={(checked) => platformForm.setValue("enableAnalytics", checked)}
+                          onCheckedChange={(checked) =>
+                            platformForm.setValue("enableAnalytics", checked)
+                          }
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Maintenance Mode</Label>
@@ -314,14 +342,16 @@ export default function SettingsPage() {
                         </div>
                         <Switch
                           checked={platformForm.watch("maintenanceMode")}
-                          onCheckedChange={(checked) => platformForm.setValue("maintenanceMode", checked)}
+                          onCheckedChange={(checked) =>
+                            platformForm.setValue("maintenanceMode", checked)
+                          }
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between">
                     <Button type="button" variant="outline" onClick={resetForm}>
                       <Undo className="mr-2 h-4 w-4" />
@@ -341,7 +371,7 @@ export default function SettingsPage() {
                       )}
                     </Button>
                   </div>
-                  
+
                   {saveStatus === "success" && (
                     <Alert className="mt-4 bg-green-50 text-green-800 border-green-300">
                       <CheckCircle className="h-4 w-4" />
@@ -356,7 +386,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="users" className="mt-6">
           <Card>
             <CardHeader>
@@ -367,15 +397,20 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <Form {...userForm}>
-                <form onSubmit={userForm.handleSubmit(onUserSubmit)} className="space-y-6">
+                <form
+                  onSubmit={userForm.handleSubmit(onUserSubmit as any)}
+                  className="space-y-6"
+                >
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">User Settings</h3>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="defaultUserRole">Default User Role</Label>
                       <Select
                         value={userForm.watch("defaultUserRole")}
-                        onValueChange={(value: "listener" | "artist" | "admin") => userForm.setValue("defaultUserRole", value)}
+                        onValueChange={(
+                          value: "listener" | "artist" | "admin"
+                        ) => userForm.setValue("defaultUserRole", value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select default role" />
@@ -387,7 +422,7 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Auto-Approve Artists</Label>
@@ -397,10 +432,12 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={userForm.watch("autoApproveArtists")}
-                        onCheckedChange={(checked) => userForm.setValue("autoApproveArtists", checked)}
+                        onCheckedChange={(checked) =>
+                          userForm.setValue("autoApproveArtists", checked)
+                        }
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Require Email Verification</Label>
@@ -410,10 +447,12 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={userForm.watch("requireEmailVerification")}
-                        onCheckedChange={(checked) => userForm.setValue("requireEmailVerification", checked)}
+                        onCheckedChange={(checked) =>
+                          userForm.setValue("requireEmailVerification", checked)
+                        }
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Allow Account Deletion</Label>
@@ -423,13 +462,15 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={userForm.watch("allowAccountDeletion")}
-                        onCheckedChange={(checked) => userForm.setValue("allowAccountDeletion", checked)}
+                        onCheckedChange={(checked) =>
+                          userForm.setValue("allowAccountDeletion", checked)
+                        }
                       />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between">
                     <Button type="button" variant="outline" onClick={resetForm}>
                       <Undo className="mr-2 h-4 w-4" />
@@ -449,7 +490,7 @@ export default function SettingsPage() {
                       )}
                     </Button>
                   </div>
-                  
+
                   {saveStatus === "success" && (
                     <Alert className="mt-4 bg-green-50 text-green-800 border-green-300">
                       <CheckCircle className="h-4 w-4" />
@@ -465,7 +506,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-      
+
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="advanced">
           <AccordionTrigger>
@@ -481,27 +522,33 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Storage Cleanup</h4>
-                      <p className="text-sm text-muted-foreground">Remove unused media files</p>
+                      <p className="text-sm text-muted-foreground">
+                        Remove unused media files
+                      </p>
                     </div>
                     <Button variant="outline" size="sm">
                       Run Cleanup
                     </Button>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Database Backup</h4>
-                      <p className="text-sm text-muted-foreground">Backup all platform data</p>
+                      <p className="text-sm text-muted-foreground">
+                        Backup all platform data
+                      </p>
                     </div>
                     <Button variant="outline" size="sm">
                       Start Backup
                     </Button>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Analytics Reset</h4>
-                      <p className="text-sm text-muted-foreground">Reset all analytics data</p>
+                      <p className="text-sm text-muted-foreground">
+                        Reset all analytics data
+                      </p>
                     </div>
                     <Button variant="destructive" size="sm">
                       Reset Data
@@ -512,7 +559,7 @@ export default function SettingsPage() {
             </Card>
           </AccordionContent>
         </AccordionItem>
-        
+
         <AccordionItem value="system-info">
           <AccordionTrigger>
             <div className="flex items-center">
@@ -530,7 +577,12 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Server Status</span>
-                    <Badge variant="outline" className="bg-green-50 text-green-700">Healthy</Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700"
+                    >
+                      Healthy
+                    </Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Songs</span>
@@ -552,5 +604,4 @@ export default function SettingsPage() {
       </Accordion>
     </div>
   );
-}
 }

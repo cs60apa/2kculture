@@ -110,6 +110,10 @@ export function EditSongDialog({
     form.setValue("coverArt", url);
   };
 
+  if (!song) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -127,7 +131,10 @@ export function EditSongDialog({
           </TabsList>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6 mt-4"
+            >
               <TabsContent value="details" className="space-y-4">
                 {/* Title */}
                 <FormField
@@ -193,9 +200,7 @@ export function EditSongDialog({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Public
-                        </FormLabel>
+                        <FormLabel className="text-base">Public</FormLabel>
                         <FormDescription>
                           {field.value
                             ? "Song is publicly available to all listeners"
@@ -243,8 +248,14 @@ export function EditSongDialog({
                             handleCoverArtUpload(url);
                           }}
                         >
-                          <Button type="button" variant="outline" className="w-full">
-                            {field.value ? "Change Cover Art" : "Upload Cover Art"}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                          >
+                            {field.value
+                              ? "Change Cover Art"
+                              : "Upload Cover Art"}
                           </Button>
                         </FileUploader>
                       </div>
@@ -252,17 +263,17 @@ export function EditSongDialog({
                     </FormItem>
                   )}
                 />
-                
+
                 {/* Audio Preview */}
                 <div className="space-y-2 pt-4">
                   <h3 className="text-sm font-medium">Audio Preview</h3>
                   <div className="flex flex-col items-center p-4 border rounded-md">
                     <Music className="h-8 w-8 text-primary mb-2" />
                     <p className="text-sm font-medium">{song.title}</p>
-                    <audio 
-                      src={song.audioUrl} 
-                      controls 
-                      className="w-full max-w-[400px] mt-4" 
+                    <audio
+                      src={song.audioUrl}
+                      controls
+                      className="w-full max-w-[400px] mt-4"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -289,180 +300,6 @@ export function EditSongDialog({
             </form>
           </Form>
         </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
-    } catch (error) {
-      console.error("Failed to update song:", error);
-      toast.error("An error occurred while updating the song");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!song) {
-    return null;
-  }
-
-  return (
-    <Dialog open={isOpen !== undefined ? isOpen : true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>Edit Song</DialogTitle>
-          <DialogDescription>
-            Update the details for your song
-          </DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="pt-2"
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">
-                  <Music className="mr-2 h-4 w-4" />
-                  Details
-                </TabsTrigger>
-                <TabsTrigger value="tags">
-                  <Tags className="mr-2 h-4 w-4" />
-                  Tags
-                </TabsTrigger>
-                <TabsTrigger value="artwork">
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  Artwork
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="py-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Song Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter song title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="isPublic"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-md border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel>Publication Status</FormLabel>
-                        <FormDescription>
-                          {field.value
-                            ? "Published - Visible to everyone"
-                            : "Draft - Only visible to you"}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-
-              <TabsContent value="tags" className="py-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="genres"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Genres</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter genres (comma separated)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Example: Hip Hop, Rap, Soul
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter tags (comma separated)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Example: chill, summer, vibes
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-
-              <TabsContent value="artwork" className="py-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="coverArt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cover Art</FormLabel>
-                      {field.value && (
-                        <div className="relative w-32 h-32 mb-4">
-                          <Image
-                            src={field.value}
-                            alt="Cover art"
-                            fill
-                            className="object-cover rounded-md"
-                          />
-                        </div>
-                      )}
-                      <FormControl>
-                        <FileUploader
-                          endpoint="imageUploader"
-                          value={field.value}
-                          onChange={field.onChange}
-                          fileType="image"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Recommended size: 1400 x 1400 pixels (square)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-            </Tabs>
-
-            <DialogFooter className="mt-6">
-              <Button variant="outline" type="button" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
       </DialogContent>
     </Dialog>
   );

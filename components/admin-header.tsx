@@ -41,7 +41,7 @@ export function AdminHeader({ toggleSidebar }: { toggleSidebar?: () => void }) {
         return "Dashboard";
       case "content-studio":
         return "Content Studio";
-      case "all-songs":
+      case "songs":
         return "All Songs";
       case "analytics":
         return "Analytics";

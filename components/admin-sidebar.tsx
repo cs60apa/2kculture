@@ -67,13 +67,19 @@ export function AdminSidebar({
   return (
     <SidebarProvider defaultOpen={isOpen}>
       <Sidebar
-        className={`fixed left-0 top-0 z-40 h-full transition-all duration-300 ${isOpen ? "translate-x-0 w-full md:w-64" : "-translate-x-full md:translate-x-0 md:w-[80px]"}`}
+        className={`fixed left-0 top-0 z-40 h-full transition-all duration-300 ${
+          isOpen
+            ? "translate-x-0 w-full md:w-64"
+            : "-translate-x-full md:translate-x-0 md:w-[80px]"
+        }`}
       >
         <SidebarHeader className="pt-4">
           <div className="flex items-center gap-2 px-4">
             <Music className="h-8 w-8 text-primary" />
             <div
-              className={`font-bold text-lg transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 md:hidden"}`}
+              className={`font-bold text-lg transition-opacity duration-300 ${
+                isOpen ? "opacity-100" : "opacity-0 md:hidden"
+              }`}
             >
               2KCulture Admin
             </div>
@@ -105,8 +111,8 @@ export function AdminSidebar({
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={activePage === "all-songs"}
-                    onClick={() => handleNavigate("all-songs")}
+                    isActive={activePage === "songs"}
+                    onClick={() => handleNavigate("songs")}
                   >
                     <List className="h-4 w-4" />
                     <span>All Songs</span>
