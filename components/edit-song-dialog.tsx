@@ -7,7 +7,7 @@ import { z } from "zod";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Music, Image as ImageIcon, Tags } from "lucide-react";
+import { Music, Image as ImageIcon, Tags, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Song } from "@/types/song";
 
@@ -33,21 +33,20 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { FileUploader } from "@/components/file-uploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 
 interface EditSongDialogProps {
-  song: Song | null;
-  onClose: () => void;
-  onSuccess?: () => void;
-  isOpen?: boolean;
+  song: Song;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function EditSongDialog({
   song,
-  onClose,
-  onSuccess,
-  isOpen,
+  open,
+  onOpenChange,
 }: EditSongDialogProps) {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState("details");
@@ -97,8 +96,203 @@ export function EditSongDialog({
       });
 
       toast.success("Song updated successfully");
-      onSuccess?.();
-      onClose();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error updating song:", error);
+      toast.error("Failed to update song");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle cover art upload
+  const handleCoverArtUpload = (url: string) => {
+    form.setValue("coverArt", url);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Song</DialogTitle>
+          <DialogDescription>
+            Update the details for "{song?.title}"
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Song Details</TabsTrigger>
+            <TabsTrigger value="media">Media</TabsTrigger>
+          </TabsList>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+              <TabsContent value="details" className="space-y-4">
+                {/* Title */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Song title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Genres */}
+                <FormField
+                  control={form.control}
+                  name="genres"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Genres</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Pop, Hip-Hop, R&B (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Separate multiple genres with commas
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Tags */}
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="chill, summer, vibe (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Tags help listeners discover your music
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Public/Private Switch */}
+                <FormField
+                  control={form.control}
+                  name="isPublic"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Public
+                        </FormLabel>
+                        <FormDescription>
+                          {field.value
+                            ? "Song is publicly available to all listeners"
+                            : "Song is private and only visible to you"}
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="media" className="space-y-4">
+                {/* Cover Art */}
+                <FormField
+                  control={form.control}
+                  name="coverArt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cover Art</FormLabel>
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-48 h-48 rounded-md border overflow-hidden">
+                          {field.value ? (
+                            <Image
+                              src={field.value}
+                              alt="Cover art preview"
+                              width={192}
+                              height={192}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-secondary">
+                              <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <FileUploader
+                          endpoint="imageUploader"
+                          onUploadComplete={(url) => {
+                            handleCoverArtUpload(url);
+                          }}
+                        >
+                          <Button type="button" variant="outline" className="w-full">
+                            {field.value ? "Change Cover Art" : "Upload Cover Art"}
+                          </Button>
+                        </FileUploader>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Audio Preview */}
+                <div className="space-y-2 pt-4">
+                  <h3 className="text-sm font-medium">Audio Preview</h3>
+                  <div className="flex flex-col items-center p-4 border rounded-md">
+                    <Music className="h-8 w-8 text-primary mb-2" />
+                    <p className="text-sm font-medium">{song.title}</p>
+                    <audio 
+                      src={song.audioUrl} 
+                      controls 
+                      className="w-full max-w-[400px] mt-4" 
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    To replace the audio file, you'll need to upload a new song
+                  </p>
+                </div>
+              </TabsContent>
+
+              <DialogFooter className="mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
     } catch (error) {
       console.error("Failed to update song:", error);
       toast.error("An error occurred while updating the song");
