@@ -1,59 +1,55 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { EditSongDialog } from "@/components/edit-song-dialog";
-import { 
-  MoreHorizontal, 
-  Play, 
-  Edit, 
-  Trash, 
-  Music, 
-  Search, 
-  Filter, 
+import {
+  MoreHorizontal,
+  Play,
+  Edit,
+  Trash,
+  Music,
+  Search,
+  Filter,
   Check,
   EyeOff,
   Download,
   Upload,
   ExternalLink,
-  BarChart2
+  BarChart2,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -64,7 +60,7 @@ import { Song } from "@/types/song";
 export default function AllSongsPage() {
   const { user } = useUser();
   const userId = user?.id || "";
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -73,17 +69,20 @@ export default function AllSongsPage() {
   const [sortBy, setSortBy] = useState("recent");
   const [filterBy, setFilterBy] = useState("all");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  
+
   // Fetch songs from the database
   const allSongs = useQuery(api.music.getSongs) || [];
-  
+
   // Add mutation for toggling song publication status
-  const toggleSongPublicationStatus = useMutation(api.music.toggleSongPublicationStatus);
-  
+  const toggleSongPublicationStatus = useMutation(
+    api.music.toggleSongPublicationStatus
+  );
+  const deleteSong = useMutation(api.music.deleteSong);
+
   // Handle toggling publication status
   const handleTogglePublicationStatus = async (song: Song) => {
     if (!user) return;
-    
+
     try {
       await toggleSongPublicationStatus({
         id: song._id as any, // Cast to SongId type
@@ -94,39 +93,48 @@ export default function AllSongsPage() {
       console.error("Error toggling publication status:", error);
     }
   };
-  
+
+  // Get all unique genres from songs
+  const getAllGenres = () => {
+    const genres = new Set<string>();
+    allSongs.forEach((song) => {
+      if (song.genres && song.genres.length > 0) {
+        song.genres.forEach((genre) => genres.add(genre));
+      }
+    });
+    return Array.from(genres).sort();
+  };
+
+  const allGenres = getAllGenres();
+
   // Apply sorting and filtering
   const sortAndFilterSongs = () => {
     let filteredSongs = [...allSongs];
-    
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filteredSongs = filteredSongs.filter(
-        song => song.title.toLowerCase().includes(query) || 
-               song.artistName.toLowerCase().includes(query)
+        (song) =>
+          song.title.toLowerCase().includes(query) ||
+          song.artistName.toLowerCase().includes(query)
       );
     }
-    
+
     // Apply status filter
     if (filterBy === "public") {
-      filteredSongs = filteredSongs.filter(song => song.isPublic);
+      filteredSongs = filteredSongs.filter((song) => song.isPublic);
     } else if (filterBy === "private") {
-      filteredSongs = filteredSongs.filter(song => !song.isPublic);
+      filteredSongs = filteredSongs.filter((song) => !song.isPublic);
     }
-    
+
     // Apply genre filter
     if (selectedGenre) {
       filteredSongs = filteredSongs.filter(
-        song => song.genres?.includes(selectedGenre)
+        (song) => song.genres && song.genres.includes(selectedGenre)
       );
     }
-    
-    // Apply genre filter
-    if (selectedGenre) {
-      filteredSongs = filteredSongs.filter(song => song.genre === selectedGenre);
-    }
-    
+
     // Apply sorting
     switch (sortBy) {
       case "popular":
@@ -137,29 +145,20 @@ export default function AllSongsPage() {
         break;
       case "recent":
       default:
-        filteredSongs.sort((a, b) => (b._creationTime || 0) - (a._creationTime || 0));
+        filteredSongs.sort(
+          (a, b) => (b._creationTime || 0) - (a._creationTime || 0)
+        );
         break;
     }
-    
+
     return filteredSongs;
   };
-  
+
   const songs = sortAndFilterSongs();
-  
-  // Extract all unique genres from songs
-  const allGenres = useMemo(() => {
-    const genreSet = new Set<string>();
-    allSongs.forEach(song => {
-      if (song.genres && song.genres.length > 0) {
-        song.genres.forEach(genre => genreSet.add(genre));
-      }
-    });
-    return Array.from(genreSet).sort();
-  }, [allSongs]);
-  
+
   const handleSongAction = (action: string, song: Song) => {
     setSelectedSong(song);
-    
+
     switch (action) {
       case "edit":
         setIsEditDialogOpen(true);
@@ -174,12 +173,15 @@ export default function AllSongsPage() {
         break;
     }
   };
-  
+
   const handleDeleteSong = async () => {
-    if (selectedSong) {
+    if (selectedSong && user) {
       try {
         // Call the mutation to delete the song
-        await api.music.deleteSong({ songId: selectedSong._id });
+        await deleteSong({
+          id: selectedSong._id as any,
+          artistId: user.id,
+        });
         setIsDeleteDialogOpen(false);
         setSelectedSong(null);
       } catch (error) {
@@ -187,16 +189,16 @@ export default function AllSongsPage() {
       }
     }
   };
-  
+
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return "Unknown";
     return new Date(timestamp).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -206,7 +208,7 @@ export default function AllSongsPage() {
             Manage and organize your music library
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button asChild>
             <Link href="/admin/upload">
@@ -216,12 +218,12 @@ export default function AllSongsPage() {
           </Button>
         </div>
       </div>
-      
+
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Song Library</CardTitle>
-            
+
             <div className="flex flex-col sm:flex-row items-center gap-2">
               <div className="relative w-full sm:w-[240px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -232,7 +234,7 @@ export default function AllSongsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -247,16 +249,20 @@ export default function AllSongsPage() {
                     All Songs
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterBy("public")}>
-                    {filterBy === "public" && <Check className="mr-2 h-4 w-4" />}
+                    {filterBy === "public" && (
+                      <Check className="mr-2 h-4 w-4" />
+                    )}
                     Public Only
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setFilterBy("private")}>
-                    {filterBy === "private" && <Check className="mr-2 h-4 w-4" />}
+                    {filterBy === "private" && (
+                      <Check className="mr-2 h-4 w-4" />
+                    )}
                     Private Only
                   </DropdownMenuItem>
-                  
+
                   <DropdownMenuSeparator />
-                  
+
                   <DropdownMenuLabel>Sort By</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setSortBy("recent")}>
                     {sortBy === "recent" && <Check className="mr-2 h-4 w-4" />}
@@ -267,15 +273,41 @@ export default function AllSongsPage() {
                     Most Popular
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy("alphabetical")}>
-                    {sortBy === "alphabetical" && <Check className="mr-2 h-4 w-4" />}
+                    {sortBy === "alphabetical" && (
+                      <Check className="mr-2 h-4 w-4" />
+                    )}
                     Alphabetical
                   </DropdownMenuItem>
+
+                  {allGenres.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Filter by Genre</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => setSelectedGenre(null)}>
+                        {selectedGenre === null && (
+                          <Check className="mr-2 h-4 w-4" />
+                        )}
+                        All Genres
+                      </DropdownMenuItem>
+                      {allGenres.map((genre) => (
+                        <DropdownMenuItem
+                          key={genre}
+                          onClick={() => setSelectedGenre(genre)}
+                        >
+                          {selectedGenre === genre && (
+                            <Check className="mr-2 h-4 w-4" />
+                          )}
+                          {genre}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           {songs.length > 0 ? (
             <ScrollArea className="h-[calc(100vh-320px)]">
@@ -297,11 +329,11 @@ export default function AllSongsPage() {
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded bg-secondary overflow-hidden flex-shrink-0">
                             {song.coverArt ? (
-                              <Image 
-                                src={song.coverArt} 
-                                alt={song.title} 
-                                width={40} 
-                                height={40} 
+                              <Image
+                                src={song.coverArt}
+                                alt={song.title}
+                                width={40}
+                                height={40}
                                 className="h-full w-full object-cover"
                               />
                             ) : (
@@ -312,7 +344,9 @@ export default function AllSongsPage() {
                           </div>
                           <div className="space-y-1">
                             <p className="font-medium">{song.title}</p>
-                            <p className="text-xs text-muted-foreground">{song.artistName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {song.artistName}
+                            </p>
                           </div>
                         </div>
                       </TableCell>
@@ -320,8 +354,9 @@ export default function AllSongsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={song.isPublic}
-                            onCheckedChange={() => handleTogglePublicationStatus(song)}
-                            size="sm"
+                            onCheckedChange={() =>
+                              handleTogglePublicationStatus(song)
+                            }
                           />
                           {song.isPublic ? (
                             <Badge variant="default">Public</Badge>
@@ -331,8 +366,12 @@ export default function AllSongsPage() {
                         </div>
                       </TableCell>
                       <TableCell>{formatDate(song._creationTime)}</TableCell>
-                      <TableCell className="text-right">{song.plays || 0}</TableCell>
-                      <TableCell className="text-right">{song.likes || 0}</TableCell>
+                      <TableCell className="text-right">
+                        {song.plays || 0}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {song.likes || 0}
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -342,22 +381,28 @@ export default function AllSongsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleSongAction("play", song)}>
+                            <DropdownMenuItem
+                              onClick={() => handleSongAction("play", song)}
+                            >
                               <Play className="mr-2 h-4 w-4" />
                               Play
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSongAction("edit", song)}>
+                            <DropdownMenuItem
+                              onClick={() => handleSongAction("edit", song)}
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/admin/analytics?songId=${song._id}`}>
+                              <Link
+                                href={`/admin/analytics?songId=${song._id}`}
+                              >
                                 <BarChart2 className="mr-2 h-4 w-4" />
                                 Analytics
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleSongAction("delete", song)}
                               className="text-destructive focus:text-destructive"
                             >
@@ -377,8 +422,8 @@ export default function AllSongsPage() {
               <Music className="h-10 w-10 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold">No songs found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery 
-                  ? "No songs match your search query" 
+                {searchQuery
+                  ? "No songs match your search query"
                   : "Upload your first song to get started"}
               </p>
               {!searchQuery && (
@@ -393,18 +438,22 @@ export default function AllSongsPage() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Song</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedSong?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{selectedSong?.title}"? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteSong}>
@@ -413,7 +462,7 @@ export default function AllSongsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Edit Song Dialog */}
       {selectedSong && (
         <EditSongDialog
@@ -422,7 +471,7 @@ export default function AllSongsPage() {
           song={selectedSong}
         />
       )}
-      
+
       {/* Play Song Dialog */}
       <Dialog open={isPlayDialogOpen} onOpenChange={setIsPlayDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -432,15 +481,15 @@ export default function AllSongsPage() {
               Listen to "{selectedSong?.title}" by {selectedSong?.artistName}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="flex flex-col items-center py-4">
             <div className="h-48 w-48 rounded-md bg-secondary overflow-hidden mb-4">
               {selectedSong?.coverArt ? (
-                <Image 
-                  src={selectedSong.coverArt} 
-                  alt={selectedSong.title} 
-                  width={192} 
-                  height={192} 
+                <Image
+                  src={selectedSong.coverArt}
+                  alt={selectedSong.title}
+                  width={192}
+                  height={192}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -449,16 +498,19 @@ export default function AllSongsPage() {
                 </div>
               )}
             </div>
-            
-            <audio 
-              src={selectedSong?.audioUrl} 
-              controls 
+
+            <audio
+              src={selectedSong?.audioUrl}
+              controls
               className="w-full max-w-[400px] mt-4"
             />
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPlayDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsPlayDialogOpen(false)}
+            >
               Close
             </Button>
             <Button asChild>

@@ -50,23 +50,17 @@ export const getPlayCountAnalytics = query({
     ]);
 
     // Calculate play counts by day
-    const playsByDay = plays.reduce(
-      (acc, play) => {
-        const date = new Date(play.timestamp).toISOString().split("T")[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    const playsByDay = plays.reduce((acc, play) => {
+      const date = new Date(play.timestamp).toISOString().split("T")[0];
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Calculate play counts by song
-    const playsBySong = plays.reduce(
-      (acc, play) => {
-        acc[play.songId] = (acc[play.songId] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    const playsBySong = plays.reduce((acc, play) => {
+      acc[play.songId] = (acc[play.songId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Sort songs by play count
     const rankedSongs = allSongs
@@ -96,56 +90,59 @@ export const getDashboardStats = query({
 
     // Get daily plays for the last 30 days
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recentPlays = plays.filter(play => play.timestamp >= thirtyDaysAgo);
-    
+    const recentPlays = plays.filter((play) => play.timestamp >= thirtyDaysAgo);
+
     // Aggregate plays by day
     const dailyPlays = [];
     const dailyPlayMap = new Map();
-    
+
     for (const play of recentPlays) {
       const date = new Date(play.timestamp).toDateString();
       const count = dailyPlayMap.get(date) || 0;
       dailyPlayMap.set(date, count + 1);
     }
-    
+
     // Convert to array
     for (const [date, count] of dailyPlayMap.entries()) {
       dailyPlays.push({ date, count });
     }
-    
+
     // Sort by date
-    dailyPlays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+    dailyPlays.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     // Get top songs by play count
     const songPlays = new Map();
     for (const play of plays) {
       const count = songPlays.get(play.songId) || 0;
       songPlays.set(play.songId, count + 1);
     }
-    
+
     const topSongsIds = [...songPlays.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([songId]) => songId);
-    
+
     const topSongs = [];
     for (const songId of topSongsIds) {
       const song = await ctx.db.get(songId);
-      if (song) {
+      // Check if it's a song with the expected properties
+      if (song && "title" in song && "artistName" in song) {
         topSongs.push({
           id: song._id,
           title: song.title,
           artistName: song.artistName,
           coverArt: song.coverArt,
-          plays: songPlays.get(songId) || 0
+          plays: songPlays.get(songId) || 0,
         });
       }
     }
-    
+
     return {
       totalPlays,
       dailyPlays,
-      topSongs
+      topSongs,
     };
   },
 });
@@ -154,75 +151,83 @@ export const getDashboardStats = query({
 export const getRecentActivity = query({
   args: {},
   handler: async (ctx) => {
-    const recentActivity = [];
+    // Define a type for our activity entries
+    type ActivityEntry = {
+      type: string;
+      title: string;
+      coverArt?: string;
+      timestamp: number;
+      count: number;
+    };
     
+    const recentActivity: ActivityEntry[] = [];
+
     // Get recent plays
-    const recentPlays = await ctx.db.query("plays")
-      .order("desc")
-      .take(5);
-    
+    const recentPlays = await ctx.db.query("plays").order("desc").take(5);
+
     for (const play of recentPlays) {
       const song = await ctx.db.get(play.songId);
       if (song) {
         // Count plays for this song
-        const songPlays = await ctx.db.query("plays")
-          .filter(q => q.eq(q.field("songId"), play.songId))
+        const songPlays = await ctx.db
+          .query("plays")
+          .filter((q) => q.eq(q.field("songId"), play.songId))
           .collect();
-        
+
         recentActivity.push({
-          type: 'play',
+          type: "play",
           title: song.title,
           coverArt: song.coverArt,
           timestamp: play.timestamp,
-          count: songPlays.length
+          count: songPlays.length,
         });
       }
     }
-    
+
     // Get recent engagements (likes)
-    const recentEngagements = await ctx.db.query("engagement")
-      .filter(q => q.eq(q.field("type"), "like"))
+    const recentEngagements = await ctx.db
+      .query("engagement")
+      .filter((q) => q.eq(q.field("type"), "like"))
       .order("desc")
       .take(5);
-    
+
     for (const engagement of recentEngagements) {
       const song = await ctx.db.get(engagement.songId);
       if (song) {
         // Count likes for this song
-        const songLikes = await ctx.db.query("engagement")
-          .filter(q => 
+        const songLikes = await ctx.db
+          .query("engagement")
+          .filter((q) =>
             q.and(
               q.eq(q.field("songId"), engagement.songId),
               q.eq(q.field("type"), "like")
             )
           )
           .collect();
-        
+
         recentActivity.push({
-          type: 'like',
+          type: "like",
           title: song.title,
           coverArt: song.coverArt,
           timestamp: engagement.timestamp,
-          count: songLikes.length
+          count: songLikes.length,
         });
       }
     }
-    
+
     // Get recent uploads (songs)
-    const recentSongs = await ctx.db.query("songs")
-      .order("desc")
-      .take(5);
-    
+    const recentSongs = await ctx.db.query("songs").order("desc").take(5);
+
     for (const song of recentSongs) {
       recentActivity.push({
-        type: 'upload',
+        type: "upload",
         title: song.title,
         coverArt: song.coverArt,
         timestamp: song._creationTime,
-        count: 1
+        count: 1,
       });
     }
-    
+
     // Sort by timestamp (most recent first) and take 10
     recentActivity.sort((a, b) => b.timestamp - a.timestamp);
     return recentActivity.slice(0, 10);
@@ -360,40 +365,31 @@ export const getEngagementAnalytics = query({
     ]);
 
     // Calculate engagement by type
-    const engagementByType = engagementEvents.reduce(
-      (acc, event) => {
-        acc[event.type] = (acc[event.type] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+    const engagementByType = engagementEvents.reduce((acc, event) => {
+      acc[event.type] = (acc[event.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Calculate engagement by day
-    const engagementByDay = engagementEvents.reduce(
-      (acc, event) => {
-        const date = new Date(event.timestamp).toISOString().split("T")[0];
-        acc[date] = {
-          ...acc[date],
-          total: (acc[date]?.total || 0) + 1,
-          [event.type]: (acc[date]?.[event.type] || 0) + 1,
-        };
-        return acc;
-      },
-      {} as Record<string, { total: number; [key: string]: number }>
-    );
+    const engagementByDay = engagementEvents.reduce((acc, event) => {
+      const date = new Date(event.timestamp).toISOString().split("T")[0];
+      acc[date] = {
+        ...acc[date],
+        total: (acc[date]?.total || 0) + 1,
+        [event.type]: (acc[date]?.[event.type] || 0) + 1,
+      };
+      return acc;
+    }, {} as Record<string, { total: number; [key: string]: number }>);
 
     // Calculate engagement by song
-    const engagementBySong = engagementEvents.reduce(
-      (acc, event) => {
-        acc[event.songId] = {
-          ...acc[event.songId],
-          total: (acc[event.songId]?.total || 0) + 1,
-          [event.type]: (acc[event.songId]?.[event.type] || 0) + 1,
-        };
-        return acc;
-      },
-      {} as Record<string, { total: number; [key: string]: number }>
-    );
+    const engagementBySong = engagementEvents.reduce((acc, event) => {
+      acc[event.songId] = {
+        ...acc[event.songId],
+        total: (acc[event.songId]?.total || 0) + 1,
+        [event.type]: (acc[event.songId]?.[event.type] || 0) + 1,
+      };
+      return acc;
+    }, {} as Record<string, { total: number; [key: string]: number }>);
 
     // Calculate overall engagement rate
     const totalEngagements = engagementEvents.length;
@@ -430,53 +426,54 @@ export const getSongAnalytics = query({
   args: { songId: v.id("songs") },
   handler: async (ctx, args) => {
     const { songId } = args;
-    
+
     // Get song details
     const song = await ctx.db.get(songId);
     if (!song) {
       throw new Error("Song not found");
     }
-    
+
     // Get all plays for the song
-    const plays = await ctx.db.query("plays")
-      .filter(q => q.eq(q.field("songId"), songId))
+    const plays = await ctx.db
+      .query("plays")
+      .filter((q) => q.eq(q.field("songId"), songId))
       .collect();
-    
+
     // Get likes for the song
-    const likes = await ctx.db.query("engagement")
-      .filter(q => 
-        q.and(
-          q.eq(q.field("songId"), songId),
-          q.eq(q.field("type"), "like")
-        )
+    const likes = await ctx.db
+      .query("engagement")
+      .filter((q) =>
+        q.and(q.eq(q.field("songId"), songId), q.eq(q.field("type"), "like"))
       )
       .collect();
-    
+
     // Calculate daily plays for the last 30 days
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recentPlays = plays.filter(play => play.timestamp >= thirtyDaysAgo);
-    
+    const recentPlays = plays.filter((play) => play.timestamp >= thirtyDaysAgo);
+
     const dailyPlays = [];
     const dailyPlayMap = new Map();
-    
+
     for (const play of recentPlays) {
       const date = new Date(play.timestamp).toDateString();
       const count = dailyPlayMap.get(date) || 0;
       dailyPlayMap.set(date, count + 1);
     }
-    
+
     // Convert to array and sort
     for (const [date, count] of dailyPlayMap.entries()) {
       dailyPlays.push({ date, count });
     }
-    
-    dailyPlays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
+    dailyPlays.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     return {
       song,
       totalPlays: plays.length,
       totalLikes: likes.length,
-      dailyPlays
+      dailyPlays,
     };
   },
 });
@@ -486,74 +483,87 @@ export const getArtistAnalytics = query({
   args: { artistId: v.string() },
   handler: async (ctx, args) => {
     const { artistId } = args;
-    
+
     // Get all songs by this artist
-    const songs = await ctx.db.query("songs")
-      .filter(q => q.eq(q.field("artistId"), artistId))
+    const songs = await ctx.db
+      .query("songs")
+      .filter((q) => q.eq(q.field("artistId"), artistId))
       .collect();
-    
-    const songIds = songs.map(song => song._id);
-    
-    // Get all plays for these songs
-    const plays = await ctx.db.query("plays")
-      .filter(q => q.in(q.field("songId"), songIds))
-      .collect();
-    
-    // Get all likes for these songs
-    const likes = await ctx.db.query("engagement")
-      .filter(q => 
-        q.and(
-          q.in(q.field("songId"), songIds),
-          q.eq(q.field("type"), "like")
+
+    const songIds = songs.map((song) => song._id);
+
+    // Get all plays for these songs - without using 'in' operator
+    const plays = [];
+    for (const songId of songIds) {
+      const songPlays = await ctx.db
+        .query("plays")
+        .filter((q) => q.eq(q.field("songId"), songId))
+        .collect();
+      plays.push(...songPlays);
+    }
+
+    // Get all likes for these songs - without using 'in' operator
+    const likes = [];
+    for (const songId of songIds) {
+      const songLikes = await ctx.db
+        .query("engagement")
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("songId"), songId), 
+            q.eq(q.field("type"), "like")
+          )
         )
-      )
-      .collect();
-    
+        .collect();
+      likes.push(...songLikes);
+    }
+
     // Calculate plays and likes per song
     const songAnalytics = [];
     for (const song of songs) {
-      const songPlays = plays.filter(play => play.songId === song._id).length;
-      const songLikes = likes.filter(like => like.songId === song._id).length;
-      
+      const songPlays = plays.filter((play) => play.songId === song._id).length;
+      const songLikes = likes.filter((like) => like.songId === song._id).length;
+
       songAnalytics.push({
         id: song._id,
         title: song.title,
         coverArt: song.coverArt,
         plays: songPlays,
         likes: songLikes,
-        releaseDate: song.releaseDate
+        releaseDate: song.releaseDate,
       });
     }
-    
+
     // Sort by play count (most played first)
     songAnalytics.sort((a, b) => b.plays - a.plays);
-    
+
     // Calculate daily plays for the last 30 days
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recentPlays = plays.filter(play => play.timestamp >= thirtyDaysAgo);
-    
+    const recentPlays = plays.filter((play) => play.timestamp >= thirtyDaysAgo);
+
     const dailyPlays = [];
     const dailyPlayMap = new Map();
-    
+
     for (const play of recentPlays) {
       const date = new Date(play.timestamp).toDateString();
       const count = dailyPlayMap.get(date) || 0;
       dailyPlayMap.set(date, count + 1);
     }
-    
+
     // Convert to array and sort
     for (const [date, count] of dailyPlayMap.entries()) {
       dailyPlays.push({ date, count });
     }
-    
-    dailyPlays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
+    dailyPlays.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     return {
       totalSongs: songs.length,
       totalPlays: plays.length,
       totalLikes: likes.length,
       songAnalytics,
-      dailyPlays
+      dailyPlays,
     };
   },
 });

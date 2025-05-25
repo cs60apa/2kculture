@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useUser } from "@clerk/nextjs";
 import {
   Card,
@@ -12,12 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -43,58 +39,69 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Song } from "@/types/song";
+import { Song, SongId } from "@/types/song";
+
+// Helper function to safely convert string IDs to Convex IDs
+const toSongId = (id: string | null): SongId | null => {
+  if (!id) return null;
+  return id as unknown as SongId;
+};
 
 export default function AnalyticsPage() {
   const { user } = useUser();
   const userId = user?.id || "";
   const searchParams = useSearchParams();
   const songIdParam = searchParams.get("songId");
-  
-  const [timeframe, setTimeframe] = useState<"7days" | "30days" | "90days" | "year">("30days");
+
+  const [timeframe, setTimeframe] = useState<
+    "7days" | "30days" | "90days" | "year"
+  >("30days");
   const [activeTab, setActiveTab] = useState(songIdParam ? "song" : "overview");
-  const [selectedSongId, setSelectedSongId] = useState<string | null>(songIdParam);
-  
+  const [selectedSongId, setSelectedSongId] = useState<SongId | null>(
+    toSongId(songIdParam)
+  );
+
   // Fetch analytics data
-  const artistAnalytics = useQuery(api.analytics.getArtistAnalytics, { 
-    artistId: userId 
+  const artistAnalytics = useQuery(api.analytics.getArtistAnalytics, {
+    artistId: userId,
   });
-  
+
   const playCountAnalytics = useQuery(api.analytics.getPlayCountAnalytics, {
     artistId: userId,
     timeframe,
   });
-  
+
   const engagementAnalytics = useQuery(api.analytics.getEngagementAnalytics, {
     artistId: userId,
     timeframe,
   });
-  
-  const selectedSongAnalytics = selectedSongId 
+
+  const selectedSongAnalytics = selectedSongId
     ? useQuery(api.analytics.getSongAnalytics, { songId: selectedSongId })
     : null;
-  
-  const songs = useQuery(api.music.getSongsByArtist, { artistId: userId }) || [];
-  
+
+  const songs =
+    useQuery(api.music.getSongsByArtist, { artistId: userId }) || [];
+
   // Find the selected song object
-  const selectedSong = songs.find(song => song._id === selectedSongId);
-  
+  const selectedSong = songs.find((song) => song._id === selectedSongId);
+
   useEffect(() => {
     if (songIdParam) {
-      setSelectedSongId(songIdParam);
+      setSelectedSongId(toSongId(songIdParam));
       setActiveTab("song");
     }
   }, [songIdParam]);
-  
+
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return "";
     return new Date(timestamp).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -104,9 +111,12 @@ export default function AnalyticsPage() {
             Track your music performance and audience engagement
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <Select value={timeframe} onValueChange={(value: any) => setTimeframe(value)}>
+          <Select
+            value={timeframe}
+            onValueChange={(value: any) => setTimeframe(value)}
+          >
             <SelectTrigger className="w-[160px]">
               <Calendar className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Select timeframe" />
@@ -120,7 +130,7 @@ export default function AnalyticsPage() {
           </Select>
         </div>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -129,7 +139,7 @@ export default function AnalyticsPage() {
             Song Details
           </TabsTrigger>
         </TabsList>
-        
+
         <div className="mt-6">
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
@@ -139,7 +149,9 @@ export default function AnalyticsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Plays</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Total Plays
+                      </p>
                       <h3 className="text-2xl font-bold mt-1">
                         {artistAnalytics?.totalPlays.toLocaleString() || "0"}
                       </h3>
@@ -156,14 +168,17 @@ export default function AnalyticsPage() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Unique Listeners</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Unique Listeners
+                      </p>
                       <h3 className="text-2xl font-bold mt-1">
-                        {playCountAnalytics?.uniqueListeners.toLocaleString() || "0"}
+                        {playCountAnalytics?.uniqueListeners.toLocaleString() ||
+                          "0"}
                       </h3>
                     </div>
                     <div className="p-2 bg-primary/10 rounded-full">
@@ -171,16 +186,20 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   <div className="flex items-center mt-4 text-sm text-muted-foreground">
-                    <span>From {playCountAnalytics?.rankedSongs.length || 0} songs</span>
+                    <span>
+                      From {playCountAnalytics?.rankedSongs.length || 0} songs
+                    </span>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Likes</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Total Likes
+                      </p>
                       <h3 className="text-2xl font-bold mt-1">
                         {artistAnalytics?.totalLikes.toLocaleString() || "0"}
                       </h3>
@@ -197,14 +216,18 @@ export default function AnalyticsPage() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Engagement Rate</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Engagement Rate
+                      </p>
                       <h3 className="text-2xl font-bold mt-1">
-                        {engagementAnalytics ? `${engagementAnalytics.engagementRate.toFixed(1)}%` : "0%"}
+                        {engagementAnalytics
+                          ? `${engagementAnalytics.engagementRate.toFixed(1)}%`
+                          : "0%"}
                       </h3>
                     </div>
                     <div className="p-2 bg-primary/10 rounded-full">
@@ -217,26 +240,37 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Performance Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Plays Over Time</CardTitle>
-                  <CardDescription>Daily play count for the selected period</CardDescription>
+                  <CardDescription>
+                    Daily play count for the selected period
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {artistAnalytics?.dailyPlays?.length ? (
                     <div className="h-[300px] w-full flex items-end justify-between gap-2 border-b border-border pt-4">
                       {artistAnalytics.dailyPlays.map((day, i) => (
-                        <div key={i} className="relative flex flex-col items-center">
-                          <div 
-                            className="w-12 bg-primary/80 rounded-t-sm" 
-                            style={{ 
+                        <div
+                          key={i}
+                          className="relative flex flex-col items-center"
+                        >
+                          <div
+                            className="w-12 bg-primary/80 rounded-t-sm"
+                            style={{
                               height: `${Math.max(
-                                (day.count / (Math.max(...artistAnalytics.dailyPlays.map(d => d.count)) || 1)) * 250, 
+                                (day.count /
+                                  (Math.max(
+                                    ...artistAnalytics.dailyPlays.map(
+                                      (d) => d.count
+                                    )
+                                  ) || 1)) *
+                                  250,
                                 20
-                              )}px` 
+                              )}px`,
                             }}
                           ></div>
                           <span className="text-xs text-muted-foreground mt-1">
@@ -247,12 +281,14 @@ export default function AnalyticsPage() {
                     </div>
                   ) : (
                     <div className="h-[300px] flex items-center justify-center">
-                      <p className="text-muted-foreground">No play data available yet</p>
+                      <p className="text-muted-foreground">
+                        No play data available yet
+                      </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Top Songs</CardTitle>
@@ -262,56 +298,68 @@ export default function AnalyticsPage() {
                   {artistAnalytics?.songAnalytics?.length ? (
                     <ScrollArea className="h-[250px] pr-4">
                       <div className="space-y-4">
-                        {artistAnalytics.songAnalytics.slice(0, 5).map((song, index) => (
-                          <div 
-                            key={index} 
-                            className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 p-2 rounded-md"
-                            onClick={() => {
-                              setSelectedSongId(song.id);
-                              setActiveTab("song");
-                            }}
-                          >
-                            <div className="font-bold text-muted-foreground w-4">{index + 1}</div>
-                            <div className="h-10 w-10 rounded bg-secondary overflow-hidden">
-                              {song.coverArt ? (
-                                <Image 
-                                  src={song.coverArt} 
-                                  alt={song.title} 
-                                  width={40} 
-                                  height={40} 
-                                  className="object-cover h-full w-full" 
-                                />
-                              ) : (
-                                <div className="flex items-center justify-center h-full w-full">
-                                  <Music className="h-5 w-5 text-muted-foreground" />
-                                </div>
-                              )}
+                        {artistAnalytics.songAnalytics
+                          .slice(0, 5)
+                          .map((song, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 p-2 rounded-md"
+                              onClick={() => {
+                                setSelectedSongId(toSongId(song.id));
+                                setActiveTab("song");
+                              }}
+                            >
+                              <div className="font-bold text-muted-foreground w-4">
+                                {index + 1}
+                              </div>
+                              <div className="h-10 w-10 rounded bg-secondary overflow-hidden">
+                                {song.coverArt ? (
+                                  <Image
+                                    src={song.coverArt}
+                                    alt={song.title}
+                                    width={40}
+                                    height={40}
+                                    className="object-cover h-full w-full"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center h-full w-full">
+                                    <Music className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {song.title}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {song.plays} plays
+                                </p>
+                              </div>
+                              <Button variant="ghost" size="icon">
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{song.title}</p>
-                              <p className="text-xs text-muted-foreground">{song.plays} plays</p>
-                            </div>
-                            <Button variant="ghost" size="icon">
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </ScrollArea>
                   ) : (
                     <div className="h-[250px] flex items-center justify-center">
-                      <p className="text-muted-foreground">No song data available yet</p>
+                      <p className="text-muted-foreground">
+                        No song data available yet
+                      </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
-            
+
             {/* Engagement Overview */}
             <Card>
               <CardHeader>
                 <CardTitle>Engagement Overview</CardTitle>
-                <CardDescription>How listeners are interacting with your music</CardDescription>
+                <CardDescription>
+                  How listeners are interacting with your music
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -347,7 +395,7 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="md:col-span-2">
                     <h3 className="font-medium mb-4">Audience Growth</h3>
                     <div className="h-[180px] border rounded-md flex items-center justify-center">
@@ -360,7 +408,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Songs Performance Tab */}
           <TabsContent value="songs">
             <Card>
@@ -381,12 +429,12 @@ export default function AnalyticsPage() {
                               <div className="flex items-center gap-3 flex-1">
                                 <div className="h-16 w-16 rounded bg-secondary overflow-hidden">
                                   {song.coverArt ? (
-                                    <Image 
-                                      src={song.coverArt} 
-                                      alt={song.title} 
-                                      width={64} 
-                                      height={64} 
-                                      className="object-cover h-full w-full" 
+                                    <Image
+                                      src={song.coverArt}
+                                      alt={song.title}
+                                      width={64}
+                                      height={64}
+                                      className="object-cover h-full w-full"
                                     />
                                   ) : (
                                     <div className="flex items-center justify-center h-full w-full">
@@ -401,30 +449,39 @@ export default function AnalyticsPage() {
                                   </p>
                                 </div>
                               </div>
-                              
+
                               <div className="grid grid-cols-3 gap-4 mt-4 md:mt-0">
                                 <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Plays</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Plays
+                                  </p>
                                   <p className="font-medium">{song.plays}</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Likes</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Likes
+                                  </p>
                                   <p className="font-medium">{song.likes}</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Engagement</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Engagement
+                                  </p>
                                   <p className="font-medium">
-                                    {song.plays > 0 
-                                      ? `${((song.likes / song.plays) * 100).toFixed(1)}%` 
+                                    {song.plays > 0
+                                      ? `${(
+                                          (song.likes / song.plays) *
+                                          100
+                                        ).toFixed(1)}%`
                                       : "0%"}
                                   </p>
                                 </div>
                               </div>
-                              
-                              <Button 
-                                variant="outline" 
+
+                              <Button
+                                variant="outline"
                                 onClick={() => {
-                                  setSelectedSongId(song.id);
+                                  setSelectedSongId(toSongId(song.id));
                                   setActiveTab("song");
                                 }}
                               >
@@ -439,9 +496,12 @@ export default function AnalyticsPage() {
                 ) : (
                   <div className="py-12 text-center">
                     <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold">No songs available</h3>
+                    <h3 className="text-lg font-semibold">
+                      No songs available
+                    </h3>
                     <p className="text-muted-foreground max-w-md mx-auto mt-2 mb-6">
-                      Upload your first song to start tracking performance metrics and analytics
+                      Upload your first song to start tracking performance
+                      metrics and analytics
                     </p>
                     <Button asChild>
                       <Link href="/admin/upload">Upload Your First Song</Link>
@@ -451,7 +511,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Song Details Tab */}
           <TabsContent value="song">
             {selectedSong && selectedSongAnalytics ? (
@@ -461,12 +521,12 @@ export default function AnalyticsPage() {
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
                       <div className="h-24 w-24 rounded-md bg-secondary overflow-hidden">
                         {selectedSong.coverArt ? (
-                          <Image 
-                            src={selectedSong.coverArt} 
-                            alt={selectedSong.title} 
-                            width={96} 
-                            height={96} 
-                            className="h-full w-full object-cover" 
+                          <Image
+                            src={selectedSong.coverArt}
+                            alt={selectedSong.title}
+                            width={96}
+                            height={96}
+                            className="h-full w-full object-cover"
                           />
                         ) : (
                           <div className="flex items-center justify-center h-full w-full">
@@ -475,13 +535,16 @@ export default function AnalyticsPage() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-2xl">{selectedSong.title}</CardTitle>
+                        <CardTitle className="text-2xl">
+                          {selectedSong.title}
+                        </CardTitle>
                         <CardDescription className="mt-1">
-                          {selectedSong.artistName} • Added {formatDate(selectedSong._creationTime)}
+                          {selectedSong.artistName} • Added{" "}
+                          {formatDate(selectedSong._creationTime)}
                         </CardDescription>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {selectedSong.genres?.map((genre, i) => (
-                            <span 
+                            <span
                               key={i}
                               className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs"
                             >
@@ -498,25 +561,36 @@ export default function AnalyticsPage() {
                     </div>
                   </CardHeader>
                 </Card>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <Card className="lg:col-span-2">
                     <CardHeader>
                       <CardTitle>Performance Over Time</CardTitle>
-                      <CardDescription>Daily play count for this song</CardDescription>
+                      <CardDescription>
+                        Daily play count for this song
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {selectedSongAnalytics.dailyPlays?.length ? (
                         <div className="h-[300px] w-full flex items-end justify-between gap-2 border-b border-border pt-4">
                           {selectedSongAnalytics.dailyPlays.map((day, i) => (
-                            <div key={i} className="relative flex flex-col items-center">
-                              <div 
-                                className="w-12 bg-primary/80 rounded-t-sm" 
-                                style={{ 
+                            <div
+                              key={i}
+                              className="relative flex flex-col items-center"
+                            >
+                              <div
+                                className="w-12 bg-primary/80 rounded-t-sm"
+                                style={{
                                   height: `${Math.max(
-                                    (day.count / (Math.max(...selectedSongAnalytics.dailyPlays.map(d => d.count)) || 1)) * 250, 
+                                    (day.count /
+                                      (Math.max(
+                                        ...selectedSongAnalytics.dailyPlays.map(
+                                          (d) => d.count
+                                        )
+                                      ) || 1)) *
+                                      250,
                                     20
-                                  )}px` 
+                                  )}px`,
                                 }}
                               ></div>
                               <span className="text-xs text-muted-foreground mt-1">
@@ -527,12 +601,14 @@ export default function AnalyticsPage() {
                         </div>
                       ) : (
                         <div className="h-[300px] flex items-center justify-center">
-                          <p className="text-muted-foreground">No play data available yet</p>
+                          <p className="text-muted-foreground">
+                            No play data available yet
+                          </p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader>
                       <CardTitle>Performance Summary</CardTitle>
@@ -564,20 +640,24 @@ export default function AnalyticsPage() {
                               <span>Engagement Rate</span>
                             </div>
                             <span className="font-bold">
-                              {selectedSongAnalytics.totalPlays > 0 
-                                ? `${((selectedSongAnalytics.totalLikes / selectedSongAnalytics.totalPlays) * 100).toFixed(1)}%` 
+                              {selectedSongAnalytics.totalPlays > 0
+                                ? `${(
+                                    (selectedSongAnalytics.totalLikes /
+                                      selectedSongAnalytics.totalPlays) *
+                                    100
+                                  ).toFixed(1)}%`
                                 : "0%"}
                             </span>
                           </div>
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div>
                           <h3 className="font-medium mb-2">Play the song</h3>
-                          <audio 
-                            src={selectedSong.audioUrl} 
-                            controls 
+                          <audio
+                            src={selectedSong.audioUrl}
+                            controls
                             className="w-full"
                           />
                         </div>
@@ -592,7 +672,8 @@ export default function AnalyticsPage() {
                   <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold">No song selected</h3>
                   <p className="text-muted-foreground max-w-md mx-auto mt-2 mb-6">
-                    Select a song from the Songs Performance tab to see detailed analytics
+                    Select a song from the Songs Performance tab to see detailed
+                    analytics
                   </p>
                   <Button onClick={() => setActiveTab("songs")}>
                     View All Songs

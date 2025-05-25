@@ -34,13 +34,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { FileUploader } from "@/components/file-uploader";
-import { 
-  ArrowLeft, 
-  Info, 
-  Loader2, 
-  Music, 
+import {
+  ArrowLeft,
+  Info,
+  Loader2,
+  Music,
   Upload as UploadIcon,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -51,7 +51,7 @@ const uploadSchema = z.object({
   coverArt: z.string().optional(),
   genres: z.string().optional(),
   tags: z.string().optional(),
-  isPublic: z.boolean().default(false),
+  isPublic: z.boolean(),
 });
 
 type UploadFormValues = z.infer<typeof uploadSchema>;
@@ -77,10 +77,12 @@ export default function UploadPage() {
     },
   });
 
-  const handleAudioUpload = (url: string) => {
+  const handleAudioUpload = (url?: string) => {
+    if (!url) return;
+
     form.setValue("audioUrl", url);
     form.clearErrors("audioUrl");
-    
+
     // Extract title from filename if title is empty
     if (!form.getValues("title")) {
       const filename = url.split("/").pop();
@@ -90,16 +92,17 @@ export default function UploadPage() {
           .slice(0, -1)
           .join(".")
           .replace(/-|_/g, " ");
-        
+
         form.setValue("title", title);
       }
     }
-    
+
     // Auto-navigate to details tab after upload
     setActiveTab("details");
   };
 
-  const handleCoverArtUpload = (url: string) => {
+  const handleCoverArtUpload = (url?: string) => {
+    if (!url) return;
     form.setValue("coverArt", url);
   };
 
@@ -113,8 +116,14 @@ export default function UploadPage() {
 
     try {
       // Format genres and tags as arrays
-      const genres = data.genres ? data.genres.split(",").map((g) => g.trim()) : [];
-      const tags = data.tags ? data.tags.split(",").map((t) => t.trim()) : [];
+      const genres =
+        data.genres && data.genres.length > 0
+          ? data.genres.split(",").map((g) => g.trim())
+          : [];
+      const tags =
+        data.tags && data.tags.length > 0
+          ? data.tags.split(",").map((t) => t.trim())
+          : [];
 
       // Create the song
       await createSong({
@@ -129,10 +138,10 @@ export default function UploadPage() {
       });
 
       toast.success("Song uploaded successfully!");
-      
+
       // Reset the form
       form.reset();
-      
+
       // Redirect to songs page
       router.push("/admin/songs");
     } catch (error) {
@@ -152,7 +161,7 @@ export default function UploadPage() {
             Share your music with the world
           </p>
         </div>
-        
+
         <Button variant="outline" asChild>
           <Link href="/admin/songs">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -166,27 +175,28 @@ export default function UploadPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="upload">Upload</TabsTrigger>
-              <TabsTrigger 
-                value="details" 
+              <TabsTrigger
+                value="details"
                 disabled={!form.getValues("audioUrl")}
               >
                 Details
               </TabsTrigger>
-              <TabsTrigger 
-                value="preview" 
+              <TabsTrigger
+                value="preview"
                 disabled={!form.getValues("audioUrl")}
               >
                 Preview & Publish
               </TabsTrigger>
             </TabsList>
-            
+
             <div className="mt-6">
               <TabsContent value="upload">
                 <Card>
                   <CardHeader>
                     <CardTitle>Upload Audio</CardTitle>
                     <CardDescription>
-                      Select an audio file to upload. Supported formats: MP3, WAV
+                      Select an audio file to upload. Supported formats: MP3,
+                      WAV
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -198,56 +208,28 @@ export default function UploadPage() {
                           <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg">
                             {!field.value ? (
                               <FileUploader
+                                onChange={handleAudioUpload}
                                 endpoint="audioUploader"
-                                onUploadComplete={handleAudioUpload}
-                                onUploadProgress={setUploadProgress}
-                                onUploadStart={() => setIsUploading(true)}
-                                onUploadError={() => setIsUploading(false)}
-                              >
-                                <div className="flex flex-col items-center justify-center gap-4 py-4">
-                                  {isUploading ? (
-                                    <>
-                                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                                      <div className="text-center">
-                                        <p className="font-medium">Uploading...</p>
-                                        <p className="text-sm text-muted-foreground">
-                                          {uploadProgress.toFixed(0)}%
-                                        </p>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Music className="h-10 w-10 text-primary" />
-                                      <div className="text-center">
-                                        <p className="font-medium">Drag & drop or click to upload</p>
-                                        <p className="text-sm text-muted-foreground">
-                                          MP3 or WAV files up to 20MB
-                                        </p>
-                                      </div>
-                                      <Button type="button" variant="secondary">
-                                        <UploadIcon className="mr-2 h-4 w-4" />
-                                        Select File
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              </FileUploader>
+                                value={field.value}
+                              />
                             ) : (
                               <div className="flex flex-col items-center justify-center gap-4 py-4">
                                 <Music className="h-10 w-10 text-primary" />
                                 <div className="text-center">
-                                  <p className="font-medium">Upload Complete!</p>
+                                  <p className="font-medium">
+                                    Upload Complete!
+                                  </p>
                                   <p className="text-sm text-muted-foreground">
                                     Continue to the Details tab
                                   </p>
                                 </div>
-                                <audio 
-                                  src={field.value} 
-                                  controls 
-                                  className="w-full max-w-md" 
+                                <audio
+                                  src={field.value}
+                                  controls
+                                  className="w-full max-w-md"
                                 />
-                                <Button 
-                                  type="button" 
+                                <Button
+                                  type="button"
                                   variant="outline"
                                   onClick={() => {
                                     form.setValue("audioUrl", "");
@@ -283,7 +265,7 @@ export default function UploadPage() {
                   </CardFooter>
                 </Card>
               </TabsContent>
-              
+
               <TabsContent value="details">
                 <Card>
                   <CardHeader>
@@ -303,13 +285,16 @@ export default function UploadPage() {
                             <FormItem>
                               <FormLabel>Title</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter song title" {...field} />
+                                <Input
+                                  placeholder="Enter song title"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         {/* Genres */}
                         <FormField
                           control={form.control}
@@ -318,9 +303,9 @@ export default function UploadPage() {
                             <FormItem>
                               <FormLabel>Genres</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="Pop, Hip-Hop, R&B (comma separated)" 
-                                  {...field} 
+                                <Input
+                                  placeholder="Pop, Hip-Hop, R&B (comma separated)"
+                                  {...field}
                                 />
                               </FormControl>
                               <FormDescription>
@@ -330,7 +315,7 @@ export default function UploadPage() {
                             </FormItem>
                           )}
                         />
-                        
+
                         {/* Tags */}
                         <FormField
                           control={form.control}
@@ -339,9 +324,9 @@ export default function UploadPage() {
                             <FormItem>
                               <FormLabel>Tags</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="chill, summer, vibe (comma separated)" 
-                                  {...field} 
+                                <Input
+                                  placeholder="chill, summer, vibe (comma separated)"
+                                  {...field}
                                 />
                               </FormControl>
                               <FormDescription>
@@ -352,7 +337,7 @@ export default function UploadPage() {
                           )}
                         />
                       </div>
-                      
+
                       {/* Cover Art */}
                       <div>
                         <FormField
@@ -379,12 +364,9 @@ export default function UploadPage() {
                                 </div>
                                 <FileUploader
                                   endpoint="imageUploader"
-                                  onUploadComplete={handleCoverArtUpload}
-                                >
-                                  <Button type="button" variant="outline" className="w-full">
-                                    {field.value ? "Change Cover Art" : "Upload Cover Art"}
-                                  </Button>
-                                </FileUploader>
+                                  onChange={handleCoverArtUpload}
+                                  value={field.value}
+                                />
                               </div>
                               <FormMessage />
                             </FormItem>
@@ -410,7 +392,7 @@ export default function UploadPage() {
                   </CardFooter>
                 </Card>
               </TabsContent>
-              
+
               <TabsContent value="preview">
                 <Card>
                   <CardHeader>
@@ -426,66 +408,78 @@ export default function UploadPage() {
                           <h3 className="text-lg font-semibold mb-2">
                             {form.getValues("title") || "Untitled Song"}
                           </h3>
-                          
+
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            <span>{user?.fullName || user?.username || "Anonymous"}</span>
+                            <span>
+                              {user?.fullName || user?.username || "Anonymous"}
+                            </span>
                             <span>•</span>
                             <span>{new Date().toLocaleDateString()}</span>
                           </div>
-                          
+
                           <div className="mt-4">
-                            <audio 
-                              src={form.getValues("audioUrl")} 
-                              controls 
-                              className="w-full" 
+                            <audio
+                              src={form.getValues("audioUrl")}
+                              controls
+                              className="w-full"
                             />
                           </div>
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="space-y-2">
                           <h4 className="font-medium">Genres</h4>
                           <div className="flex flex-wrap gap-2">
                             {form.getValues("genres") ? (
-                              form.getValues("genres").split(",").map((genre, i) => (
-                                <span 
-                                  key={i}
-                                  className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs"
-                                >
-                                  {genre.trim()}
-                                </span>
-                              ))
+                              form
+                                .getValues("genres")!
+                                .split(",")
+                                .map((genre, i) => (
+                                  <span
+                                    key={i}
+                                    className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs"
+                                  >
+                                    {genre.trim()}
+                                  </span>
+                                ))
                             ) : (
-                              <span className="text-muted-foreground text-sm">No genres specified</span>
+                              <span className="text-muted-foreground text-sm">
+                                No genres specified
+                              </span>
                             )}
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <h4 className="font-medium">Tags</h4>
                           <div className="flex flex-wrap gap-2">
                             {form.getValues("tags") ? (
-                              form.getValues("tags").split(",").map((tag, i) => (
-                                <span 
-                                  key={i}
-                                  className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs"
-                                >
-                                  #{tag.trim()}
-                                </span>
-                              ))
+                              form
+                                .getValues("tags")!
+                                .split(",")
+                                .map((tag, i) => (
+                                  <span
+                                    key={i}
+                                    className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs"
+                                  >
+                                    #{tag.trim()}
+                                  </span>
+                                ))
                             ) : (
-                              <span className="text-muted-foreground text-sm">No tags specified</span>
+                              <span className="text-muted-foreground text-sm">
+                                No tags specified
+                              </span>
                             )}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div>
                         <div className="aspect-square rounded-md border overflow-hidden bg-secondary">
                           {form.getValues("coverArt") ? (
                             <Image
-                              src={form.getValues("coverArt")}
+                              src={form.getValues("coverArt") || ""}
                               alt="Cover art preview"
                               width={300}
                               height={300}
@@ -497,12 +491,14 @@ export default function UploadPage() {
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="mt-4 p-4 border rounded-md bg-muted/50">
                           <div className="flex items-start gap-2">
                             <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                             <div className="space-y-2">
-                              <p className="text-sm font-medium">Publishing Options</p>
+                              <p className="text-sm font-medium">
+                                Publishing Options
+                              </p>
                               <FormField
                                 control={form.control}
                                 name="isPublic"
@@ -545,7 +541,9 @@ export default function UploadPage() {
                       {isSubmitting && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      {form.getValues("isPublic") ? "Publish Song" : "Save as Private"}
+                      {form.getValues("isPublic")
+                        ? "Publish Song"
+                        : "Save as Private"}
                     </Button>
                   </CardFooter>
                 </Card>
