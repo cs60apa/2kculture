@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
+import { useEffect, useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { EditSongDialog } from "@/components/edit-song-dialog";
 import { 
   MoreHorizontal, 
@@ -71,9 +72,28 @@ export default function AllSongsPage() {
   const [isPlayDialogOpen, setIsPlayDialogOpen] = useState(false);
   const [sortBy, setSortBy] = useState("recent");
   const [filterBy, setFilterBy] = useState("all");
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   
   // Fetch songs from the database
   const allSongs = useQuery(api.music.getSongs) || [];
+  
+  // Add mutation for toggling song publication status
+  const toggleSongPublicationStatus = useMutation(api.music.toggleSongPublicationStatus);
+  
+  // Handle toggling publication status
+  const handleTogglePublicationStatus = async (song: Song) => {
+    if (!user) return;
+    
+    try {
+      await toggleSongPublicationStatus({
+        id: song._id as any, // Cast to SongId type
+        artistId: user.id,
+        isPublic: !song.isPublic,
+      });
+    } catch (error) {
+      console.error("Error toggling publication status:", error);
+    }
+  };
   
   // Apply sorting and filtering
   const sortAndFilterSongs = () => {
@@ -95,6 +115,18 @@ export default function AllSongsPage() {
       filteredSongs = filteredSongs.filter(song => !song.isPublic);
     }
     
+    // Apply genre filter
+    if (selectedGenre) {
+      filteredSongs = filteredSongs.filter(
+        song => song.genres?.includes(selectedGenre)
+      );
+    }
+    
+    // Apply genre filter
+    if (selectedGenre) {
+      filteredSongs = filteredSongs.filter(song => song.genre === selectedGenre);
+    }
+    
     // Apply sorting
     switch (sortBy) {
       case "popular":
@@ -113,6 +145,17 @@ export default function AllSongsPage() {
   };
   
   const songs = sortAndFilterSongs();
+  
+  // Extract all unique genres from songs
+  const allGenres = useMemo(() => {
+    const genreSet = new Set<string>();
+    allSongs.forEach(song => {
+      if (song.genres && song.genres.length > 0) {
+        song.genres.forEach(genre => genreSet.add(genre));
+      }
+    });
+    return Array.from(genreSet).sort();
+  }, [allSongs]);
   
   const handleSongAction = (action: string, song: Song) => {
     setSelectedSong(song);
@@ -274,11 +317,18 @@ export default function AllSongsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {song.isPublic ? (
-                          <Badge variant="default">Public</Badge>
-                        ) : (
-                          <Badge variant="secondary">Private</Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={song.isPublic}
+                            onCheckedChange={() => handleTogglePublicationStatus(song)}
+                            size="sm"
+                          />
+                          {song.isPublic ? (
+                            <Badge variant="default">Public</Badge>
+                          ) : (
+                            <Badge variant="secondary">Private</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{formatDate(song._creationTime)}</TableCell>
                       <TableCell className="text-right">{song.plays || 0}</TableCell>
