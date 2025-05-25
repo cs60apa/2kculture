@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Settings page for admin
 export default function SettingsPage() {

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Songs management page for admin
 export default function AdminSongsPage() {
-  // TODO: Fetch songs from backend
-  const songs = [];
+  const songs = useQuery(api.music.getSongs) ?? [];
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -12,7 +13,6 @@ export default function AdminSongsPage() {
         <Button>Add New Song</Button>
       </div>
       <Table>
-        {/* TODO: Render song rows */}
         <thead>
           <tr>
             <th>Title</th>
@@ -22,12 +22,22 @@ export default function AdminSongsPage() {
           </tr>
         </thead>
         <tbody>
-          {/* Example row */}
-          <tr>
-            <td colSpan={4} className="text-center text-gray-400">
-              No songs yet.
-            </td>
-          </tr>
+          {songs.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="text-center text-gray-400">
+                No songs yet.
+              </td>
+            </tr>
+          ) : (
+            songs.map((song) => (
+              <tr key={song._id}>
+                <td>{song.title}</td>
+                <td>{song.artistName}</td>
+                <td>{song.isPublic ? "Published" : "Draft"}</td>
+                <td>{/* TODO: Add edit/delete actions */}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </Table>
     </div>

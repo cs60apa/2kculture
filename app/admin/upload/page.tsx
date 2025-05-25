@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { FileUploader } from "@/components/file-uploader";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Upload page for admin
 export default function AdminUploadPage() {

@@ -1,10 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Albums management page for admin
 export default function AdminAlbumsPage() {
-  // TODO: Fetch albums from backend
-  const albums = [];
+  // TODO: Replace with actual admin logic to fetch all albums if available
+  // For now, use a placeholder artistId or fetch all albums if you have such a query
+  const albums =
+    useQuery(api.music.getAlbumsByArtist, { artistId: "admin" }) ?? [];
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -12,7 +16,6 @@ export default function AdminAlbumsPage() {
         <Button>Add New Album</Button>
       </div>
       <Table>
-        {/* TODO: Render album rows */}
         <thead>
           <tr>
             <th>Title</th>
@@ -22,12 +25,22 @@ export default function AdminAlbumsPage() {
           </tr>
         </thead>
         <tbody>
-          {/* Example row */}
-          <tr>
-            <td colSpan={4} className="text-center text-gray-400">
-              No albums yet.
-            </td>
-          </tr>
+          {albums.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="text-center text-gray-400">
+                No albums yet.
+              </td>
+            </tr>
+          ) : (
+            albums.map((album) => (
+              <tr key={album._id}>
+                <td>{album.title}</td>
+                <td>{album.artistName}</td>
+                <td>{album.isPublic ? "Published" : "Draft"}</td>
+                <td>{/* TODO: Add edit/delete actions */}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </Table>
     </div>
