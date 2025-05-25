@@ -159,7 +159,7 @@ export const getRecentActivity = query({
       timestamp: number;
       count: number;
     };
-    
+
     const recentActivity: ActivityEntry[] = [];
 
     // Get recent plays
@@ -167,7 +167,8 @@ export const getRecentActivity = query({
 
     for (const play of recentPlays) {
       const song = await ctx.db.get(play.songId);
-      if (song) {
+      // Check if song has the expected properties
+      if (song && "title" in song) {
         // Count plays for this song
         const songPlays = await ctx.db
           .query("plays")
@@ -177,7 +178,7 @@ export const getRecentActivity = query({
         recentActivity.push({
           type: "play",
           title: song.title,
-          coverArt: song.coverArt,
+          coverArt: "coverArt" in song ? song.coverArt : undefined,
           timestamp: play.timestamp,
           count: songPlays.length,
         });
@@ -193,7 +194,8 @@ export const getRecentActivity = query({
 
     for (const engagement of recentEngagements) {
       const song = await ctx.db.get(engagement.songId);
-      if (song) {
+      // Check if song has the expected properties
+      if (song && "title" in song) {
         // Count likes for this song
         const songLikes = await ctx.db
           .query("engagement")
@@ -208,7 +210,7 @@ export const getRecentActivity = query({
         recentActivity.push({
           type: "like",
           title: song.title,
-          coverArt: song.coverArt,
+          coverArt: "coverArt" in song ? song.coverArt : undefined,
           timestamp: engagement.timestamp,
           count: songLikes.length,
         });
@@ -219,6 +221,7 @@ export const getRecentActivity = query({
     const recentSongs = await ctx.db.query("songs").order("desc").take(5);
 
     for (const song of recentSongs) {
+      // For songs, we can be sure they have the title property
       recentActivity.push({
         type: "upload",
         title: song.title,
@@ -507,11 +510,8 @@ export const getArtistAnalytics = query({
     for (const songId of songIds) {
       const songLikes = await ctx.db
         .query("engagement")
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("songId"), songId), 
-            q.eq(q.field("type"), "like")
-          )
+        .filter((q) =>
+          q.and(q.eq(q.field("songId"), songId), q.eq(q.field("type"), "like"))
         )
         .collect();
       likes.push(...songLikes);
