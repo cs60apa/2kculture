@@ -7,8 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -42,8 +43,48 @@ export default function AdminDashboardPage() {
   };
   const recentActivity = useQuery(api.analytics.getRecentActivity) ?? [];
 
+  // Test data mutation
+  const createTestData = useMutation(api.music.createTestData);
+
+  // Handle creating test data
+  const handleCreateTestData = async () => {
+    if (!user?.id || !user?.fullName) {
+      toast.error("Please sign in to create test data");
+      return;
+    }
+
+    try {
+      await createTestData({
+        artistId: user.id,
+        artistName: user.fullName,
+      });
+      toast.success("Test data created successfully!");
+    } catch (error) {
+      console.error("Error creating test data:", error);
+      toast.error("Failed to create test data");
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Debug Panel - Remove in production */}
+      {songs.length === 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-blue-800 mb-2">Getting Started</h4>
+            <p className="text-sm text-blue-700 mb-3">
+              No content found. Create some test data to get started with the admin dashboard.
+            </p>
+            <Button 
+              onClick={handleCreateTestData}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Create Test Data
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

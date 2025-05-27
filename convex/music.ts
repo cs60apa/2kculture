@@ -88,6 +88,72 @@ export const updateUser = mutation({
   },
 });
 
+// TEST DATA FUNCTION - Remove in production
+export const createTestData = mutation({
+  args: { artistId: v.string(), artistName: v.string() },
+  handler: async (ctx, args) => {
+    // Create test songs
+    const testSongs = [
+      {
+        title: "Sample Song 1",
+        artistId: args.artistId,
+        artistName: args.artistName,
+        audioUrl: "https://example.com/song1.mp3",
+        coverArt: "https://picsum.photos/400/400?random=1",
+        duration: 180,
+        genres: ["Pop", "Electronic"],
+        isPublic: true,
+        releaseDate: Date.now(),
+        lyrics: "Sample lyrics for testing",
+        description: "A sample song for testing the platform",
+        tags: ["test", "sample"],
+        plays: 125,
+        likes: 15,
+      },
+      {
+        title: "Draft Song",
+        artistId: args.artistId,
+        artistName: args.artistName,
+        audioUrl: "https://example.com/song2.mp3",
+        coverArt: "https://picsum.photos/400/400?random=2",
+        duration: 210,
+        genres: ["Rock", "Alternative"],
+        isPublic: false,
+        releaseDate: Date.now(),
+        lyrics: "Draft lyrics",
+        description: "A draft song",
+        tags: ["draft", "rock"],
+        plays: 0,
+        likes: 0,
+      },
+      {
+        title: "Popular Track",
+        artistId: args.artistId,
+        artistName: args.artistName,
+        audioUrl: "https://example.com/song3.mp3",
+        coverArt: "https://picsum.photos/400/400?random=3",
+        duration: 195,
+        genres: ["Hip-Hop", "Rap"],
+        isPublic: true,
+        releaseDate: Date.now() - 86400000, // 1 day ago
+        lyrics: "Popular track lyrics",
+        description: "A popular track with many plays",
+        tags: ["popular", "hip-hop"],
+        plays: 1250,
+        likes: 89,
+      },
+    ];
+
+    const songIds = [];
+    for (const songData of testSongs) {
+      const songId = await ctx.db.insert("songs", songData);
+      songIds.push(songId);
+    }
+
+    return { success: true, songsCreated: songIds.length };
+  },
+});
+
 // SONG RELATED FUNCTIONS
 export const createSong = mutation({
   args: {

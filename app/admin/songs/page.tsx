@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -78,6 +79,26 @@ export default function AllSongsPage() {
     api.music.toggleSongPublicationStatus
   );
   const deleteSong = useMutation(api.music.deleteSong);
+  const createTestData = useMutation(api.music.createTestData);
+
+  // Handle creating test data
+  const handleCreateTestData = async () => {
+    if (!user?.id || !user?.fullName) {
+      toast.error("Please sign in to create test data");
+      return;
+    }
+
+    try {
+      await createTestData({
+        artistId: user.id,
+        artistName: user.fullName,
+      });
+      toast.success("Test data created successfully!");
+    } catch (error) {
+      console.error("Error creating test data:", error);
+      toast.error("Failed to create test data");
+    }
+  };
 
   // Handle toggling publication status
   const handleTogglePublicationStatus = async (song: Song) => {
@@ -427,12 +448,17 @@ export default function AllSongsPage() {
                   : "Upload your first song to get started"}
               </p>
               {!searchQuery && (
-                <Button asChild>
-                  <Link href="/admin/upload">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Song
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button asChild>
+                    <Link href="/admin/upload">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Song
+                    </Link>
+                  </Button>
+                  <Button variant="outline" onClick={handleCreateTestData}>
+                    Add Test Data
+                  </Button>
+                </div>
               )}
             </div>
           )}
