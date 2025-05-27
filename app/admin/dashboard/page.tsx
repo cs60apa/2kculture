@@ -65,26 +65,45 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Debug information
+  console.log("Admin Dashboard Debug:", {
+    user: user?.id,
+    songsCount: songs?.length,
+    albumsCount: albums?.length,
+    draftsCount: drafts?.length,
+    analyticsLoaded: !!analytics,
+    recentActivityCount: recentActivity?.length,
+  });
+
   return (
     <div className="space-y-6">
-      {/* Debug Panel - Remove in production */}
-      {songs.length === 0 && (
+      {/* Quick Action for Empty State */}
+      {songs?.length === 0 && (
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-4">
-            <h4 className="font-semibold text-blue-800 mb-2">Getting Started</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">Get Started</h4>
             <p className="text-sm text-blue-700 mb-3">
-              No content found. Create some test data to get started with the admin dashboard.
+              Your music platform is ready! Add some content to get started.
             </p>
-            <Button 
-              onClick={handleCreateTestData}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Create Test Data
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleCreateTestData}
+                size="sm"
+                variant="outline"
+              >
+                Add Sample Data
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/admin/upload">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Song
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

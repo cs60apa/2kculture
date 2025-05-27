@@ -448,17 +448,12 @@ export default function AllSongsPage() {
                   : "Upload your first song to get started"}
               </p>
               {!searchQuery && (
-                <div className="flex gap-2">
-                  <Button asChild>
-                    <Link href="/admin/upload">
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload Song
-                    </Link>
-                  </Button>
-                  <Button variant="outline" onClick={handleCreateTestData}>
-                    Add Test Data
-                  </Button>
-                </div>
+                <Button asChild>
+                  <Link href="/admin/upload">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Song
+                  </Link>
+                </Button>
               )}
             </div>
           )}

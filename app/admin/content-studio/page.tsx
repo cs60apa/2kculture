@@ -120,7 +120,7 @@ export default function ContentStudioPage() {
     setIsCreateDialogOpen(true);
   };
 
-  // Handle dialog close
+ 
   const handleDialogClose = () => {
     setIsCreateDialogOpen(false);
     setSelectedContentType(null);
@@ -318,19 +318,12 @@ export default function ContentStudioPage() {
                       <p className="mt-2 text-sm text-muted-foreground">
                         You don't have any draft content. Create something new!
                       </p>
-                      <div className="mt-4 flex gap-2 justify-center">
-                        <Button onClick={() => setIsCreateDialogOpen(true)}>
-                          Create New
-                        </Button>
-                        {publishedSongsCount === 0 && (
-                          <Button 
-                            variant="outline" 
-                            onClick={handleCreateTestData}
-                          >
-                            Add Test Data
-                          </Button>
-                        )}
-                      </div>
+                      <Button
+                        className="mt-4"
+                        onClick={() => setIsCreateDialogOpen(true)}
+                      >
+                        Create New
+                      </Button>
                     </div>
                   ) : (
                     <ScrollArea className="h-[400px] px-6">
