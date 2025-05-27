@@ -24,10 +24,12 @@ interface FileUploaderProps {
 
 export function FileUploader({
   onChange,
+  onUploadComplete,
   endpoint,
   value,
   className,
   fileType = endpoint === "audioUploader" ? "audio" : "image",
+  children,
 }: FileUploaderProps) {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
@@ -99,40 +101,22 @@ export function FileUploader({
     );
 
   return (
-    <div className={cn("w-full", className)}>
-      {children || (value ? (
-        <div className="flex flex-col items-center justify-center space-y-2">
-          {fileType === "audio" ? (
-            <audio src={value} controls className="w-full mt-2" />
-          ) : (
-            <div className="relative h-20 w-20 overflow-hidden rounded-md">
-              <Image
-                src={value}
-                alt="Uploaded file"
-                fill
-                sizes="80px"
-                className="object-cover"
-              />
-            </div>
-          )}
-          <Button variant="outline" onClick={() => onChange?.("")} size="sm">
-            Change {fileType}
-          </Button>
-        </div>
-      ) : (
-        <div
-          {...getRootProps()}
-          className={cn(
+    <div {...getRootProps()} className={cn("w-full", className)}>
+      <input {...getInputProps()} />
+      <div
+        className={cn(
+          "w-full",
+          !children &&
             "border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors",
-            isDragActive
-              ? "border-primary bg-primary/5"
-              : "border-gray-300 dark:border-gray-700",
-            uploadError
-              ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20"
-              : ""
-          )}
-        >
-          <input {...getInputProps()} />
+          !children && isDragActive
+            ? "border-primary bg-primary/5"
+            : "border-gray-300 dark:border-gray-700",
+          !children && uploadError
+            ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20"
+            : ""
+        )}
+      >
+        {children || (
           <div className="flex flex-col items-center justify-center text-center">
             {uploadError ? (
               <AlertCircle className="h-10 w-10 text-red-500" />
@@ -150,8 +134,8 @@ export function FileUploader({
               {uploadError
                 ? uploadError
                 : isDragActive
-                  ? `Drop the ${fileType} file here...`
-                  : `Drag 'n' drop ${fileType} file here, or click to select file`}
+                ? `Drop the ${fileType} file here...`
+                : `Drag 'n' drop ${fileType} file here, or click to select file`}
             </p>
             {!uploadError && (
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -161,8 +145,8 @@ export function FileUploader({
               </p>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {isUploading && (
         <div className="mt-4 space-y-2">
