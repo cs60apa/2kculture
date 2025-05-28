@@ -1,9 +1,5 @@
 import { QueryCtx, MutationCtx, ActionCtx } from "./_generated/server";
-import { convexToJson, jsonToConvex } from "convex/values";
 import { ConvexError } from "convex/values";
-
-// Configure auth for the Clerk issuer domain from your environment
-const clerkIssuer = "https://lasting-vulture-86.clerk.accounts.dev";
 
 export async function getUser(ctx: QueryCtx | MutationCtx | ActionCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -11,11 +7,8 @@ export async function getUser(ctx: QueryCtx | MutationCtx | ActionCtx) {
     throw new ConvexError("Unauthenticated call");
   }
 
-  // Verify the issuer
-  if (identity.tokenIdentifier.startsWith(clerkIssuer) === false) {
-    throw new ConvexError("Invalid token issuer");
-  }
-
+  // We don't need to verify the issuer anymore as Clerk handles this
+  // through the ConvexProviderWithClerk configuration
   return identity;
 }
 
