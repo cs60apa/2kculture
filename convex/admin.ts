@@ -26,7 +26,7 @@ export const promoteToAdmin = mutation({
 
     // Schedule action to update Clerk metadata
     await ctx.scheduler.runAfter(0, api.admin.updateClerkRole, {
-      userId: args.userId
+      userId: args.userId,
     });
 
     return await ctx.db.get(existingUser._id);
@@ -60,19 +60,19 @@ export const updateClerkRole = action({
   handler: async (ctx, args) => {
     // Build URL for Clerk API
     const url = `https://api.clerk.com/v1/users/${args.userId}/metadata`;
-    
+
     // Make request to Clerk API
     const response = await fetch(url, {
-      method: "PATCH", 
+      method: "PATCH",
       headers: {
-        "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         publicMetadata: {
-          role: "admin"
-        }
-      })
+          role: "admin",
+        },
+      }),
     });
 
     if (!response.ok) {
@@ -80,5 +80,5 @@ export const updateClerkRole = action({
     }
 
     return true;
-  }
+  },
 });
