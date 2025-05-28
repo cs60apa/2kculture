@@ -37,5 +37,28 @@ export function AdminAuth({ children }: { children: React.ReactNode }) {
   }
 
   // Allow the content to render
+  if (!userData) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-secondary"></div>
+          <div className="h-4 w-24 rounded bg-secondary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (userData.role !== "admin") {
+    // Show loading state while redirecting
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-secondary"></div>
+          <div className="h-4 w-24 rounded bg-secondary"></div>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
