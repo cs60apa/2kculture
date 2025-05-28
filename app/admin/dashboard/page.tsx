@@ -30,7 +30,25 @@ export default function AdminDashboardPage() {
   const { user } = useUser();
   const userId = user?.id;
   const userData = useQuery(api.music.getUser, userId ? { userId } : "skip");
-  
+
+  // Wait for user data to be loaded and verified
+  if (!userData?.role || userData.role !== "admin") {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">
+            You need admin privileges to view this page.
+          </p>
+          <Button asChild>
+            <Link href="/">Return Home</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Only fetch admin data after verifying role
   const allSongs = useQuery(api.music.getSongs) ?? [];
   const allAlbums = useQuery(api.music.getAllAlbums) ?? [];
   const allDrafts = useQuery(api.music.getAllDrafts) ?? [];
@@ -52,10 +70,10 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Songs
+                  Total Content
                 </p>
                 <h3 className="text-2xl font-bold mt-1">
-                  {songs.length || <Skeleton className="h-8 w-12" />}
+                  {allSongs.length || <Skeleton className="h-8 w-12" />}
                 </h3>
               </div>
               <div className="p-2 bg-primary/10 rounded-full">
@@ -64,9 +82,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex items-center mt-4 text-sm text-muted-foreground">
               <span className="text-green-500 font-medium">
-                +{drafts.length} draft(s)
+                {allDrafts.length} draft(s)
               </span>
-              <span className="ml-1.5">to be published</span>
+              <span className="ml-1.5">pending review</span>
             </div>
           </CardContent>
         </Card>
@@ -76,19 +94,19 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Albums
+                  Total Users
                 </p>
                 <h3 className="text-2xl font-bold mt-1">
-                  {albums.length || <Skeleton className="h-8 w-12" />}
+                  {analytics.totalUsers || <Skeleton className="h-8 w-12" />}
                 </h3>
               </div>
               <div className="p-2 bg-primary/10 rounded-full">
-                <Music className="h-5 w-5 text-primary" />
+                <Users className="h-5 w-5 text-primary" />
               </div>
             </div>
             <div className="flex items-center mt-4 text-sm text-muted-foreground">
               <span className="text-blue-500 font-medium">
-                Featured collections
+                {analytics.totalArtists} artists
               </span>
             </div>
           </CardContent>

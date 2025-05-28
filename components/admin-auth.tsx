@@ -9,7 +9,10 @@ import { api } from "@/convex/_generated/api";
 export function AdminAuth({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
-  const userData = useQuery(api.music.getUser, isLoaded && user ? { userId: user.id } : "skip");
+  const userData = useQuery(
+    api.music.getUser,
+    isLoaded && user ? { userId: user.id } : "skip"
+  );
 
   useEffect(() => {
     if (isLoaded) {

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { verifyAdmin } from "./auth";
 
 // Query to get play count analytics
 export const getPlayCountAnalytics = query({
@@ -571,18 +572,8 @@ export const getArtistAnalytics = query({
 // Get admin dashboard stats
 export const getAdminDashboardStats = query({
   handler: async (ctx) => {
-    // Verify admin role
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .first();
-
-    if (!user || user.role !== "admin") {
-      throw new Error("Not authorized");
-    }
+    const adminUser = await verifyAdmin(ctx);
+    if (!adminUser) return null;
 
     // Get all plays
     const plays = await ctx.db.query("plays").collect();
@@ -630,12 +621,13 @@ export const getAdminDashboardStats = query({
     const topSongs = [];
     for (const songId of topSongIds) {
       const song = await ctx.db.get(songId);
-      if (song) {
+      // Check if it's a song with the expected properties
+      if (song && "title" in song && "artistName" in song && "_id" in song) {
         topSongs.push({
           id: song._id,
           title: song.title,
           artistName: song.artistName,
-          coverArt: song.coverArt,
+          coverArt: "coverArt" in song ? song.coverArt : undefined,
           plays: songPlayCounts.get(song._id),
         });
       }

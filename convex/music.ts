@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { verifyAdmin } from "./auth";
 
 // USER RELATED FUNCTIONS
 export const createUser = mutation({
@@ -237,7 +238,7 @@ export const getSongs = query({
   handler: async (ctx) => {
     const songs = await ctx.db
       .query("songs")
-      .filter((q) => q.eq(q.field("isPublic"), true))
+      .filter((q: any) => q.eq(q.field("isPublic"), true))
       .order("desc")
       .take(50);
 
@@ -741,19 +742,10 @@ export const trackPlay = mutation({
 
 // Admin queries
 export const getAllAlbums = query({
+  args: {},
   handler: async (ctx) => {
-    // First verify that the user has admin role
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .first();
-
-    if (!user || user.role !== "admin") {
-      throw new Error("Not authorized");
-    }
+    const adminUser = await verifyAdmin(ctx);
+    if (!adminUser) return null;
 
     const albums = await ctx.db.query("albums").order("desc").collect();
 
@@ -762,19 +754,10 @@ export const getAllAlbums = query({
 });
 
 export const getAllDrafts = query({
+  args: {},
   handler: async (ctx) => {
-    // First verify that the user has admin role
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .first();
-
-    if (!user || user.role !== "admin") {
-      throw new Error("Not authorized");
-    }
+    const adminUser = await verifyAdmin(ctx);
+    if (!adminUser) return null;
 
     const drafts = await ctx.db
       .query("songs")
