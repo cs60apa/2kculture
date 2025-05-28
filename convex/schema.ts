@@ -16,7 +16,7 @@ export default defineSchema({
     location: v.optional(v.string()),
   }).searchIndex("search_userId", {
     searchField: "userId",
-    filterFields: ["role"]
+    filterFields: ["role"],
   }),
 
   // Songs table
@@ -39,11 +39,11 @@ export default defineSchema({
   })
     .searchIndex("search_artist", {
       searchField: "artistId",
-      filterFields: ["isPublic"]
+      filterFields: ["isPublic"],
     })
     .searchIndex("search_album", {
       searchField: "albumId",
-      filterFields: ["isPublic"]
+      filterFields: ["isPublic"],
     })
     .index("by_popularity", ["plays", "releaseDate"])
     .index("by_recent", ["releaseDate", "isPublic"]),
@@ -58,11 +58,10 @@ export default defineSchema({
     genres: v.optional(v.array(v.string())),
     description: v.optional(v.string()),
     isPublic: v.boolean(), // whether the album is published
-  })
-    .searchIndex("search_artist", {
-      searchField: "artistId",
-      filterFields: ["isPublic"]
-    }),
+  }).searchIndex("search_artist", {
+    searchField: "artistId",
+    filterFields: ["isPublic"],
+  }),
 
   // Playlists
   playlists: defineTable({
@@ -73,11 +72,10 @@ export default defineSchema({
     isPublic: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .searchIndex("search_user", {
-      searchField: "userId",
-      filterFields: ["isPublic"]
-    }),
+  }).searchIndex("search_user", {
+    searchField: "userId",
+    filterFields: ["isPublic"],
+  }),
 
   // Playlist songs - many-to-many relation
   playlistSongs: defineTable({

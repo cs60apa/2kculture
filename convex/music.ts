@@ -150,7 +150,7 @@ export const createSong = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.artistId))
+      .filter((q) => q.eq(q.field("userId"), args.artistId))
       .first();
 
     if (!user) {
@@ -294,7 +294,7 @@ export const getSongsByArtist = query({
   handler: async (ctx, args) => {
     const songs = await ctx.db
       .query("songs")
-      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
+      .filter((q) => q.eq(q.field("artistId"), args.artistId))
       .order("desc")
       .collect();
 
@@ -307,8 +307,12 @@ export const getDraftSongsByArtist = query({
   handler: async (ctx, args) => {
     const songs = await ctx.db
       .query("songs")
-      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
-      .filter((q) => q.eq(q.field<"isPublic">("isPublic"), false))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("artistId"), args.artistId),
+          q.eq(q.field("isPublic"), false)
+        )
+      )
       .order("desc")
       .collect();
 
@@ -321,8 +325,12 @@ export const getPublishedSongsByArtist = query({
   handler: async (ctx, args) => {
     const songs = await ctx.db
       .query("songs")
-      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
-      .filter((q) => q.eq(q.field("isPublic"), true))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("artistId"), args.artistId),
+          q.eq(q.field("isPublic"), true)
+        )
+      )
       .order("desc")
       .collect();
 
@@ -381,7 +389,7 @@ export const createAlbum = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.artistId))
+      .filter((q) => q.eq(q.field("userId"), args.artistId))
       .first();
 
     if (!user) {
@@ -424,7 +432,7 @@ export const deleteAlbum = mutation({
     // Delete all songs in this album
     const albumSongs = await ctx.db
       .query("songs")
-      .withIndex("by_albumId", (q) => q.eq("albumId", args.id))
+      .filter((q) => q.eq(q.field("albumId"), args.id))
       .collect();
 
     for (const song of albumSongs) {
@@ -470,7 +478,7 @@ export const getAlbumsByArtist = query({
   handler: async (ctx, args) => {
     const albums = await ctx.db
       .query("albums")
-      .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
+      .filter((q) => q.eq(q.field("artistId"), args.artistId))
       .order("desc")
       .collect();
 
@@ -489,7 +497,7 @@ export const getAlbumWithSongs = query({
 
     const songs = await ctx.db
       .query("songs")
-      .withIndex("by_albumId", (q) => q.eq("albumId", args.albumId))
+      .filter((q) => q.eq(q.field("albumId"), args.albumId))
       .collect();
 
     return {
@@ -511,7 +519,7 @@ export const createPlaylist = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
     if (!user) {
@@ -538,7 +546,7 @@ export const getUserPlaylists = query({
   handler: async (ctx, args) => {
     const playlists = await ctx.db
       .query("playlists")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .order("desc")
       .collect();
 
@@ -571,7 +579,7 @@ export const addSongToPlaylist = mutation({
     // Get the current highest position
     const existingSongs = await ctx.db
       .query("playlistSongs")
-      .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
+      .filter((q) => q.eq(q.field("playlistId"), args.playlistId))
       .collect();
 
     const position = existingSongs.length;
@@ -624,7 +632,7 @@ export const toggleLike = mutation({
     // Check if user exists
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
     if (!user) {
@@ -640,8 +648,11 @@ export const toggleLike = mutation({
     // Check if the like already exists
     const existingLike = await ctx.db
       .query("likes")
-      .withIndex("by_user_song", (q) =>
-        q.eq("userId", args.userId).eq("songId", args.songId)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("userId"), args.userId),
+          q.eq(q.field("songId"), args.songId)
+        )
       )
       .first();
 
