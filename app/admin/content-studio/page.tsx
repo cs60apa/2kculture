@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -92,35 +91,13 @@ export default function ContentStudioPage() {
     (song) => song.isPublic
   ).length;
 
-  // Test data mutation
-  const createTestData = useMutation(api.music.createTestData);
-
-  // Handle creating test data
-  const handleCreateTestData = async () => {
-    if (!user?.id || !user?.fullName) {
-      toast.error("Please sign in to create test data");
-      return;
-    }
-
-    try {
-      await createTestData({
-        artistId: user.id,
-        artistName: user.fullName,
-      });
-      toast.success("Test data created successfully!");
-    } catch (error) {
-      console.error("Error creating test data:", error);
-      toast.error("Failed to create test data");
-    }
-  };
-
   // Handle content creation
   const handleCreateContent = (type: ContentType) => {
     setSelectedContentType(type);
     setIsCreateDialogOpen(true);
   };
 
- 
+  // Handle dialog close
   const handleDialogClose = () => {
     setIsCreateDialogOpen(false);
     setSelectedContentType(null);

@@ -567,3 +567,86 @@ export const getArtistAnalytics = query({
     };
   },
 });
+
+// Get admin dashboard stats
+export const getAdminDashboardStats = query({
+  handler: async (ctx) => {
+    // Verify admin role
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .first();
+
+    if (!user || user.role !== "admin") {
+      throw new Error("Not authorized");
+    }
+
+    // Get all plays
+    const plays = await ctx.db.query("plays").collect();
+    const totalPlays = plays.length;
+
+    // Get total users and artists
+    const users = await ctx.db.query("users").collect();
+    const totalUsers = users.length;
+    const totalArtists = users.filter((u) => u.role === "artist").length;
+
+    // Get daily plays for the last 30 days
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const recentPlays = plays.filter((play) => play.timestamp >= thirtyDaysAgo);
+
+    const dailyPlays = [];
+    const dailyPlayMap = new Map();
+
+    for (const play of recentPlays) {
+      const date = new Date(play.timestamp).toDateString();
+      const count = dailyPlayMap.get(date) || 0;
+      dailyPlayMap.set(date, count + 1);
+    }
+
+    // Convert to array and sort
+    for (const [date, count] of dailyPlayMap.entries()) {
+      dailyPlays.push({ date, count });
+    }
+
+    dailyPlays.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Calculate top songs
+    const songPlayCounts = new Map();
+    for (const play of plays) {
+      const count = songPlayCounts.get(play.songId) || 0;
+      songPlayCounts.set(play.songId, count + 1);
+    }
+
+    const topSongIds = [...songPlayCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    const topSongs = [];
+    for (const songId of topSongIds) {
+      const song = await ctx.db.get(songId);
+      if (song) {
+        topSongs.push({
+          id: song._id,
+          title: song.title,
+          artistName: song.artistName,
+          coverArt: song.coverArt,
+          plays: songPlayCounts.get(song._id),
+        });
+      }
+    }
+
+    return {
+      totalPlays,
+      totalUsers,
+      totalArtists,
+      dailyPlays,
+      topSongs,
+    };
+  },
+});

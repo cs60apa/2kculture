@@ -3,16 +3,23 @@
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export function AdminAuth({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
+  const userData = useQuery(api.music.getUser, isLoaded && user ? { userId: user.id } : "skip");
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in");
+    if (isLoaded) {
+      if (!isSignedIn) {
+        router.push("/sign-in");
+      } else if (userData && userData.role !== "admin") {
+        router.push("/");
+      }
     }
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, userData, router]);
 
   // Show a loading state while authentication is checking
   if (!isLoaded) {
