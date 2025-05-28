@@ -1,39 +1,63 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState, createContext, useContext } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+
+type UserContextType = {
+  role: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  imageUrl?: string;
+};
+
+const UserContext = createContext<UserContextType>({
+  role: "listener",
+});
+
+export const useUserContext = () => {
+  return useContext(UserContext);
+};
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser();
-  const createUser = useMutation(api.music.createUser);
+  const getUser = useQuery(
+    api.music.getUser,
+    isSignedIn ? { userId: user?.id } : "skip"
+  );
+  const createUser = useMutation(api.music.createUserIfNeeded);
+  const [userData, setUserData] = useState<any>(undefined);
 
   useEffect(() => {
-    const syncUser = async () => {
+    const initUser = async () => {
       if (isLoaded && isSignedIn && user) {
-        try {
-          // Create or retrieve user in Convex
-          await createUser({
-            userId: user.id,
-            name:
-              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-              user.username ||
-              "User",
-            email: user.emailAddresses[0]?.emailAddress || "",
-            imageUrl: user.imageUrl || undefined,
-            role: "artist", // Default role - you could make this configurable
-          });
-
-          console.log("User synced with Convex database");
-        } catch (error) {
-          console.error("Error syncing user with Convex:", error);
+        // First try to get the existing user
+        const existingUser = await getUser;
+        if (!existingUser) {
+          // If user doesn't exist, create them
+          const newUser = await createUser({ userId: user.id });
+          setUserData(newUser);
+        } else {
+          setUserData(existingUser);
         }
       }
     };
 
-    syncUser();
-  }, [isLoaded, isSignedIn, user, createUser]);
+    initUser();
+  }, [isLoaded, isSignedIn, user, getUser, createUser]);
 
-  return <>{children}</>;
+  const contextValue = useMemo(
+    () => ({
+      ...userData,
+      role:
+        userData?.role || (user?.publicMetadata?.role as string) || "listener",
+    }),
+    [userData, user]
+  );
+
+  return (
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
+  );
 }

@@ -46,45 +46,46 @@ type Album = Doc<"albums"> & {
 };
 
 // USER RELATED FUNCTIONS
-export const createUser = mutation({
-  args: {
-    userId: v.string(),
-    name: v.string(),
-    email: v.string(),
-    imageUrl: v.optional(v.string()),
-    role: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // Check if user already exists
-    const existingUser = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("userId"), args.userId))
-      .first();
-
-    if (existingUser) {
-      return existingUser._id;
-    }
-
-    const userId = await ctx.db.insert("users", {
-      userId: args.userId,
-      name: args.name,
-      email: args.email,
-      imageUrl: args.imageUrl,
-      role: args.role,
-      createdAt: Date.now(),
-    });
-
-    return userId;
-  },
-});
-
+// Read-only query to get user
 export const getUser = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
     const user = await ctx.db
       .query("users")
       .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
+
+    return user;
+  },
+});
+
+// Mutation to create user if they don't exist
+export const createUserIfNeeded = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .first();
+
+    if (!user) {
+      // Create user if they don't exist
+      const userId = await ctx.db.insert("users", {
+        userId: args.userId,
+        name: identity.name || "",
+        email: identity.email || "",
+        imageUrl: identity.pictureUrl,
+        role: "listener", // Default role
+        createdAt: Date.now(),
+      });
+      return await ctx.db.get(userId);
+    }
 
     return user;
   },
