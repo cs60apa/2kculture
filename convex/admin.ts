@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
+import { verifyAdmin } from "./auth";
+import { api } from "./_generated/api";
 
 // Function to promote a user to admin
 export const promoteToAdmin = mutation({
@@ -7,9 +9,6 @@ export const promoteToAdmin = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
     // Get the existing user
     const existingUser = await ctx.db
       .query("users")
@@ -23,6 +22,11 @@ export const promoteToAdmin = mutation({
     // Update the user's role to admin
     await ctx.db.patch(existingUser._id, {
       role: "admin",
+    });
+
+    // Schedule action to update Clerk metadata
+    await ctx.scheduler.runAfter(0, api.admin.updateClerkRole, {
+      userId: args.userId
     });
 
     return await ctx.db.get(existingUser._id);
@@ -46,4 +50,35 @@ export const getCurrentUser = query({
       ...user,
     };
   },
+});
+
+// Action to update Clerk role
+export const updateClerkRole = action({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Build URL for Clerk API
+    const url = `https://api.clerk.com/v1/users/${args.userId}/metadata`;
+    
+    // Make request to Clerk API
+    const response = await fetch(url, {
+      method: "PATCH", 
+      headers: {
+        "Authorization": `Bearer ${process.env.CLERK_SECRET_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        publicMetadata: {
+          role: "admin"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update Clerk metadata");
+    }
+
+    return true;
+  }
 });
