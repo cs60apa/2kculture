@@ -1,6 +1,49 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { verifyAdmin } from "./auth";
+import { Doc, Id } from "./_generated/dataModel";
+
+// Table Types
+type User = Doc<"users"> & {
+  userId: string;
+  name: string;
+  email: string;
+  imageUrl?: string;
+  role: string;
+  createdAt: number;
+  bio?: string;
+  website?: string;
+  location?: string;
+};
+
+type Song = Doc<"songs"> & {
+  title: string;
+  artistId: string;
+  artistName: string;
+  albumId?: Id<"albums">;
+  audioUrl: string;
+  coverArt?: string;
+  duration?: number;
+  genres?: string[];
+  tags?: string[];
+  plays: number;
+  likes: number;
+  shares: number;
+  comments: number;
+  releaseDate: number;
+  isPublic: boolean;
+};
+
+type Album = Doc<"albums"> & {
+  title: string;
+  artistId: string;
+  artistName: string;
+  coverArt?: string;
+  genres?: string[];
+  description?: string;
+  releaseDate: number;
+  isPublic: boolean;
+};
 
 // USER RELATED FUNCTIONS
 export const createUser = mutation({
@@ -15,7 +58,7 @@ export const createUser = mutation({
     // Check if user already exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
     if (existingUser) {
@@ -40,7 +83,7 @@ export const getUser = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
     return user;
@@ -59,7 +102,7 @@ export const updateUser = mutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
     if (!user) {
@@ -238,7 +281,7 @@ export const getSongs = query({
   handler: async (ctx) => {
     const songs = await ctx.db
       .query("songs")
-      .filter((q: any) => q.eq(q.field("isPublic"), true))
+      .filter((q) => q.eq(q.field<"isPublic">("isPublic"), true))
       .order("desc")
       .take(50);
 
@@ -265,7 +308,7 @@ export const getDraftSongsByArtist = query({
     const songs = await ctx.db
       .query("songs")
       .withIndex("by_artistId", (q) => q.eq("artistId", args.artistId))
-      .filter((q) => q.eq(q.field("isPublic"), false))
+      .filter((q) => q.eq(q.field<"isPublic">("isPublic"), false))
       .order("desc")
       .collect();
 
@@ -317,7 +360,7 @@ export const searchSongs = query({
         song.title.toLowerCase().includes(searchQuery) ||
         song.artistName.toLowerCase().includes(searchQuery) ||
         (song.genres &&
-          song.genres.some((genre) =>
+          song.genres.some((genre: string) =>
             genre.toLowerCase().includes(searchQuery)
           ))
     );

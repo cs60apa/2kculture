@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Configure authentication - removed custom auth config as it's handled via environment variables
   // User profile table
   users: defineTable({
     userId: v.string(), // Clerk user ID
@@ -13,7 +14,10 @@ export default defineSchema({
     bio: v.optional(v.string()),
     website: v.optional(v.string()),
     location: v.optional(v.string()),
-  }).index("by_userId", ["userId"]),
+  }).searchIndex("search_userId", {
+    searchField: "userId",
+    filterFields: ["role"]
+  }),
 
   // Songs table
   songs: defineTable({
@@ -23,20 +27,26 @@ export default defineSchema({
     albumId: v.optional(v.id("albums")),
     audioUrl: v.string(), // UploadThing URL
     coverArt: v.optional(v.string()), // UploadThing URL
-    duration: v.optional(v.float64()),
+    duration: v.optional(v.number()),
     genres: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
-    plays: v.float64(), // play count
-    likes: v.float64(), // like count
-    shares: v.optional(v.float64()), // share count
-    comments: v.optional(v.float64()), // comment count
-    releaseDate: v.float64(), // timestamp
+    plays: v.number(), // play count
+    likes: v.number(), // like count
+    shares: v.number(), // share count
+    comments: v.number(), // comment count
+    releaseDate: v.number(), // timestamp
     isPublic: v.boolean(), // whether the song is published
   })
-    .index("by_artistId", ["artistId"])
-    .index("by_albumId", ["albumId"])
-    .index("by_popular", ["plays"])
-    .index("by_recent", ["releaseDate"]),
+    .searchIndex("search_artist", {
+      searchField: "artistId",
+      filterFields: ["isPublic"]
+    })
+    .searchIndex("search_album", {
+      searchField: "albumId",
+      filterFields: ["isPublic"]
+    })
+    .index("by_popularity", ["plays", "releaseDate"])
+    .index("by_recent", ["releaseDate", "isPublic"]),
 
   // Albums table
   albums: defineTable({
@@ -48,7 +58,11 @@ export default defineSchema({
     genres: v.optional(v.array(v.string())),
     description: v.optional(v.string()),
     isPublic: v.boolean(), // whether the album is published
-  }).index("by_artistId", ["artistId"]),
+  })
+    .searchIndex("search_artist", {
+      searchField: "artistId",
+      filterFields: ["isPublic"]
+    }),
 
   // Playlists
   playlists: defineTable({
@@ -59,7 +73,11 @@ export default defineSchema({
     isPublic: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_userId", ["userId"]),
+  })
+    .searchIndex("search_user", {
+      searchField: "userId",
+      filterFields: ["isPublic"]
+    }),
 
   // Playlist songs - many-to-many relation
   playlistSongs: defineTable({
@@ -68,8 +86,8 @@ export default defineSchema({
     addedAt: v.number(),
     position: v.number(), // for ordering songs in a playlist
   })
-    .index("by_playlist", ["playlistId"])
-    .index("by_song", ["songId"]),
+    .index("by_playlist_song", ["playlistId", "songId"])
+    .index("by_added", ["addedAt"]),
 
   // User favorites - for liked songs
   favorites: defineTable({
@@ -77,8 +95,8 @@ export default defineSchema({
     songId: v.id("songs"),
     addedAt: v.number(),
   })
-    .index("by_user", ["userId"])
-    .index("by_song", ["songId"]),
+    .index("by_user_favorite", ["userId", "songId"])
+    .index("by_added", ["addedAt"]),
 
   // Likes system
   likes: defineTable({
@@ -86,9 +104,8 @@ export default defineSchema({
     songId: v.id("songs"),
     createdAt: v.number(),
   })
-    .index("by_user", ["userId"])
-    .index("by_song", ["songId"])
-    .index("by_user_song", ["userId", "songId"]),
+    .index("by_like", ["userId", "songId"])
+    .index("by_created", ["createdAt"]),
 
   // Listen history
   history: defineTable({
